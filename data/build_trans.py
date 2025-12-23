@@ -1,11 +1,13 @@
 import numpy as np
 import json
+import os
+root = os.path.abspath(os.path.dirname(__file__))
 
-with open('data/trajs.json') as f:
+with open(os.path.join(root, 'trajs.json')) as f:
     trajs = json.load(f)
 
-num_states = 256
-num_actions = 8
+num_states = 384
+num_actions = 16
 
 counts = np.zeros((num_states, num_actions, num_states), dtype=np.int8)
 
@@ -26,10 +28,8 @@ for s in range(num_states):
         if total_count > 0:
             transition_probs[s, a, :] = counts[s, a, :] / total_count
 
-np.save('data/trans_probs.npy', transition_probs)
+np.save(os.path.join(root, 'trans_probs.npy'), transition_probs)
 
 print(f"Transition probability matrix shape: {transition_probs.shape}")
 print(f"Total (state, action) pairs with observed transitions: {counts.sum()}")
-# print(f"Total (state, action) pairs with observed transitions: {np.sum(counts.sum(axis=2) > 0)}")
-print(f"Sample probabilities for state 0, action 0:")
 print(f"Sum of probabilities (should be 0 or 1): {transition_probs[0, 0, :].sum()}")
