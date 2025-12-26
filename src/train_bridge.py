@@ -14,14 +14,14 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--ll_filename', type=str, default='ll_pgiql.csv')
     parser.add_argument('--num_repeats', type=int, default=1)
-    parser.add_argument('--num_latents', type=int, default=3)
+    parser.add_argument('--num_latents', type=int, default=5)
     parser.add_argument('--rand_seed', type=int, default=42)
     args = parser.parse_args()
 
     num_folds = 5
     num_repeats = args.num_repeats
-    num_states = 127
-    num_actions = 4
+    num_states = 384
+    num_actions = 16
     num_latents = args.num_latents
 
     np.random.seed(args.rand_seed)
@@ -32,21 +32,22 @@ if __name__ == '__main__':
     torch.backends.cudnn.benchmark = False
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(args.rand_seed)
+    print(f'{device}')
 
     output_dir = f'outputs/bridge_train'
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+    os.makedirs(output_dir, exist_ok=True)
     output_df = pd.DataFrame(columns=['num_trajs', 'fold', 'train_ll', 'test_ll'])
 
     with open('data/trans_probs.npy', 'rb') as f:
         P = np.load(f)
     P = np.transpose(P, (0, 2, 1))
-    with open('data/train_trajs.json') as f:
+    # with open('data/train_trajs.json') as f:
+    with open('data/trajs.json') as f:
         trajs = json.load(f)
 
     len_trajs = len(trajs)
     kf = KFold(n_splits=num_folds, shuffle=True, random_state=10042)
-    for num_trajs in [237, 167, 107]:
+    for num_trajs in [len_trajs//3, len_trajs//2, len_trajs]:
         for kf_idx, (train_idxes, test_idxes) in enumerate(kf.split(trajs[:num_trajs])):
             train_trajs = [trajs[train_idx] for train_idx in train_idxes]
             test_trajs = [trajs[test_idx] for test_idx in test_idxes]
