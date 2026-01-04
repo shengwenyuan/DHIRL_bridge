@@ -4,8 +4,7 @@ import time
 
 from scipy.special import logsumexp
 from model.intention import IntentionNet, StatesRNN, IntentionTransformer
-from torch.utils.data import DataLoader, TensorDataset
-from torch.nn.utils.rnn import pad_sequence, pack_padded_sequence, pad_packed_sequence
+# from torch.nn.utils.rnn import pad_sequence, pack_padded_sequence, pad_packed_sequence
 
 class IAVI:
     def __init__(self, num_states, num_actions, P, expert_policy, discount, threshold=1e-3):
@@ -19,20 +18,29 @@ class IAVI:
 
         self.r = np.random.randn(self.num_states, self.num_actions)
         self.q = np.random.randn(self.num_states, self.num_actions)
+        # self.r = np.zeros((self.num_states, self.num_actions))
+        # self.q = np.zeros((self.num_states, self.num_actions))
 
         X = np.full((self.num_actions, self.num_actions), -1 / (self.num_actions - 1))
         np.fill_diagonal(X, 1.0)
-        self.X = X
+        self.X_inv = np.linalg.inv(X)
 
-    def train(self, num_epochs=1):
+    def train(self):
+        # X = np.ones((self.num_actions, self.num_actions))
+        # X *= -1 / (self.num_actions - 1)
+        # for i in range(self.num_actions):
+        #     X[i, i] = 1
+
         e = 0
-        while e < num_epochs:
+        while True:
             e += 1
             delta = 0
             for s in range(self.num_states):
                 tp = self.P[s, :, :]
-                opt_nextv = self.discount * np.matmul(tp.T, np.max(self.q, axis=1).reshape(-1, 1)).reshape(-1)
-                eta = np.log(self.expert_policy[s, :] + self.epsilon) - opt_nextv
+                # eta = np.log(self.expert_policy[s, :] + self.epsilon) - self.discount * np.matmul(
+                #     tp.T, logsumexp(self.q, axis=1).reshape(-1, 1)).reshape(-1)
+                eta = np.log(self.expert_policy[s, :] + self.epsilon) - self.discount * np.matmul(
+                    tp.T, np.max(self.q, axis=1).reshape(-1, 1)).reshape(-1)
                 if not np.all(np.isfinite(eta)):
                     print("Non-finite eta detected!")
                 
@@ -43,20 +51,17 @@ class IAVI:
                     eta_b = eta[action_b]
                     Y[a] = eta_a - 1 / (self.num_actions - 1) * np.sum(eta_b)
 
-                r = np.linalg.lstsq(self.X, Y, rcond=None)[0]
+                # r = np.linalg.lstsq(X, Y, rcond=None)[0]
+                r = self.X_inv @ (Y)
 
                 delta = max(delta, np.max(np.abs(self.r[s, :] - r)))
 
-                alpha = 0.1
-                self.r[s, :] = alpha * self.r[s, :] + (1 - alpha) * r
-                self.q[s, :] = alpha * self.q[s, :] + (1 - alpha) * (self.r[s, :] + opt_nextv)
-                if s == 0:
-                    print(f"\tState {s}, ite {e}: nmax_r {np.max(self.r[s, :])}, max_q {np.max(self.q[s, :])} delta {delta}")
+                self.r[s, :] = r
+                # self.q[s, :] = r + self.discount * np.matmul(tp.T, logsumexp(self.q, axis=1).reshape(-1, 1)).reshape(-1)
+                self.q[s, :] = r + self.discount * np.matmul(tp.T, np.max(self.q, axis=1).reshape(-1, 1)).reshape(-1)
 
             if delta < self.threshold:
                 break
-
-        return delta
 
 
 class PGIAVI:
@@ -86,17 +91,17 @@ class PGIAVI:
                                        num_latents=self.num_latents, 
                                        hidden_dim=128, 
                                        rnn_hidden_dim=128, 
-                                       num_layers=2,
+                                       num_layers=1,
                                        dropout=0.3)
         self.target_intention_net = StatesRNN(phi_dim=self.num_phis, 
                                        num_latents=self.num_latents, 
                                        hidden_dim=128, 
                                        rnn_hidden_dim=128, 
-                                       num_layers=2,
+                                       num_layers=1,
                                        dropout=0.3)
         self.target_intention_net.load_state_dict(self.intention_net.state_dict())
         self.target_intention_net.eval()
-        self.optimizer = torch.optim.Adam(self.intention_net.parameters(), lr=3e-3)
+        self.optimizer = torch.optim.Adam(self.intention_net.parameters(), lr=5e-3)
 
         self.state_emb = torch.nn.Embedding(self.num_states, 64)
         self.action_emb = torch.nn.Embedding(self.num_actions, 16)
@@ -123,8 +128,8 @@ class PGIAVI:
     def encode_session_traj(self, traj):
         states = torch.tensor([s for s, a, ns in traj], dtype=torch.long)
         actions = torch.tensor([a for s, a, ns in traj], dtype=torch.long)
-        s_emb = self.state_emb(states).detach()  # (T, )
-        a_emb = self.action_emb(actions).detach()  # (T, )
+        s_emb = self.state_emb(states)  # (T, )
+        a_emb = self.action_emb(actions)  # (T, )
         phis = torch.cat([s_emb, a_emb], dim=-1)  # (T, )
         return phis
     
@@ -149,32 +154,8 @@ class PGIAVI:
             loss.backward()
             self.optimizer.step()
             total_loss += loss.item()
-
-        return total_loss / num_epochs
-
-    def train_minibatch(self, loader, num_epochs=1):
-        """
-        :param agents: List of IAVI agents
-        :param num_epochs: Number of passes through the data
-        """
-        loss_list = []
-        for epoch in range(num_epochs):
-            total_loss = 0
-            for batch_phis, batch_target_gamma in loader:
-                self.optimizer.zero_grad()
-                
-                pred_logits = self.intention_net(batch_phis)  # (B, T, K)
-                pred_logf = torch.log_softmax(pred_logits, dim=-1)  # (B, T, K)
-                
-                # Compute loss: negative log-likelihood
-                loss = -(batch_target_gamma * pred_logf).sum(dim=-1).mean()
-                
-                loss.backward()
-                self.optimizer.step()
-                total_loss += loss.item()
-            loss_list.append(total_loss)
         
-        return np.mean(loss_list)
+        return total_loss / num_epochs
     
     def fit(self):
         uniform_policy = np.full((self.num_states, self.num_actions), 1.0 / self.num_actions)
@@ -187,14 +168,13 @@ class PGIAVI:
                 expert_policy=uniform_policy,
                 discount=self.discount
             )
-            # agent.train()
+            agent.train()
             agents.append(agent)
 
         logger_cnt = 0
         total_q_time = 0
         total_other_time = 0
         iteration_start_time = time.time()
-
 
         while True:
             logger_cnt += 1
@@ -211,7 +191,7 @@ class PGIAVI:
                 log_p_gammas.append(log_p_gamma)
 
                 batch_phis.append(phis)
-                batch_target_gamma.append(torch.exp(log_p_gamma).detach())
+                batch_target_gamma.append(torch.exp(log_p_gamma))
             
             # Pad sequences to same length for RNN input
             max_len = max(phi.shape[0] for phi in batch_phis)
@@ -224,12 +204,9 @@ class PGIAVI:
                 batch_target_gamma_padded[i, :seq_len] = gamma
             
             batch_phis = batch_phis_padded  # (B, T, phi_dim)
-            batch_target_gamma = batch_target_gamma_padded.detach().clone()  # (B, T, K)
-            dataset = TensorDataset(batch_phis, batch_target_gamma)
-            loader = DataLoader(dataset, batch_size=256, shuffle=True)
+            batch_target_gamma = batch_target_gamma_padded  # (B, T, K)
 
             # * * * Update Q-value & policies * * *
-            delta = 0
             q_start_time = time.time()
             for latent_idx in range(self.num_latents):
                 expert_pi = torch.zeros((self.num_states, self.num_actions))
@@ -248,17 +225,14 @@ class PGIAVI:
                     expert_policy=expert_pi.numpy(),
                     discount=self.discount
                 )
-                iavi_epoch = [1, 2, 3, 4, 5][min(logger_cnt // 5, 4)]
-                latent_delta = agent.train(iavi_epoch)
-                delta = max(delta, latent_delta)
+                agent.train()
                 agents[latent_idx] = agent
             q_time = time.time() - q_start_time
             total_q_time += q_time
 
             # * * * Update intention network * * *
             other_start_time = time.time()
-            # total_loss = self.train_batched(batch_phis, batch_target_gamma, num_epochs=1)
-            total_loss = self.train_minibatch(loader, num_epochs=1)
+            total_loss = self.train_batched(batch_phis, batch_target_gamma, num_epochs=1)
             other_time = time.time() - other_start_time
             total_other_time += other_time
 
@@ -270,7 +244,7 @@ class PGIAVI:
                 total_q_time = 0
                 total_other_time = 0
 
-            if (abs(total_loss) < 5e-3 and delta < 3e-3) or (logger_cnt >= 100):
+            if abs(total_loss) < 5e-3 or logger_cnt >= 100:
                 final_iteration_time = time.time() - iteration_start_time
                 print(f'Iteration {logger_cnt}, Converged with Loss: {total_loss:.4f}, Total time: {final_iteration_time:.2f}s')
                 break

@@ -13,6 +13,7 @@ from src.algorithms import PGIAVI
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--ll_filename', type=str, default='ll_pgiql.csv')
+    parser.add_argument('--discount', type=float, default=0.97)
     parser.add_argument('--num_repeats', type=int, default=1)
     parser.add_argument('--num_latents', type=int, default=5)
     parser.add_argument('--rand_seed', type=int, default=42)
@@ -56,7 +57,7 @@ if __name__ == '__main__':
             best_ll = None
             for repeats in range(num_repeats):
                 model = PGIAVI(num_latents=num_latents, num_states=num_states, num_actions=num_actions,
-                                train_trajs=train_trajs, test_trajs=test_trajs, P=P, discount=0.9)
+                                train_trajs=train_trajs, test_trajs=test_trajs, P=P, discount=args.discount)
                 ll, f, agents = model.fit()
                 if ll['test'] > best_test_ll:
                     best_test_ll = ll['test']
