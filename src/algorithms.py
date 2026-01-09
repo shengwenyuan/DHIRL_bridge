@@ -57,6 +57,64 @@ class IAVI:
         return delta
 
 
+import torch.nn.functional as F
+
+class IAVI_GPU:
+    def __init__(self, num_states, num_actions, P, expert_policy, discount, threshold=1e-3, alpha=0.0, device='cuda'):
+        self.num_states = num_states
+        self.num_actions = num_actions
+        
+        self.P = torch.as_tensor(P, dtype=torch.float32, device=self.device)
+        self.expert_policy = torch.as_tensor(expert_policy, dtype=torch.float32, device=self.device)
+        self.discount = discount
+        self.threshold = threshold
+        self.epsilon = 1e-6
+        self.alpha = alpha
+        self.device = torch.device(device if torch.cuda.is_available() else 'cpu')
+
+        self.r = torch.randn(self.num_states, self.num_actions, device=self.device)
+        self.q = torch.randn(self.num_states, self.num_actions, device=self.device)
+
+        X = torch.full((self.num_actions, self.num_actions), -1 / (self.num_actions - 1), device=self.device)
+        X.fill_diagonal_(1.0)
+        self.X = X
+
+    def train(self):
+        e = 0
+        while True:
+            e += 1
+
+            tp = self.P  # (num_states, num_actions, num_states)
+            max_q = torch.max(self.q, dim=1).values 
+            opt_nextv = self.discount * torch.matmul(tp, max_q.unsqueeze(-1)).squeeze(-1)
+            eta = torch.log(self.expert_policy + self.epsilon) - opt_nextv  # (num_states, num_actions)
+            if not torch.all(torch.isfinite(eta)):
+                print("Non-finite eta detected!")
+            
+            eta_sum = eta.sum(dim=1, keepdim=True)
+            Y = eta - (eta_sum - eta) / (self.num_actions - 1) # (num_states, num_actions)
+            
+            r_new = torch.linalg.lstsq(self.X, Y.T).solution.T  # (num_states, num_actions)
+            delta = torch.max(torch.abs(self.r - r_new)).item()
+            
+            self.r = self.alpha * self.r + (1 - self.alpha) * r_new
+            self.q = self.alpha * self.q + (1 - self.alpha) * (self.r + opt_nextv)
+            
+            if delta < self.threshold:
+                break
+        
+        return delta
+    
+    def get_policy(self):
+        return torch.softmax(self.q, dim=-1).cpu().numpy()
+    
+    def get_q_values(self):
+        return self.q.cpu().numpy()
+    
+    def get_rewards(self):
+        return self.r.cpu().numpy()
+
+
 class PGIAVI:
     def __init__(self, num_latents, num_states, num_actions, P, train_trajs, test_trajs, discount):
         self.num_latents = num_latents  # K
@@ -227,7 +285,6 @@ class PGIAVI:
             loader = DataLoader(dataset, batch_size=256, shuffle=True)
 
             # * * * Update Q-value & policies * * *
-            delta = 0
             q_start_time = time.time()
             for latent_idx in range(self.num_latents):
                 expert_pi = torch.zeros((self.num_states, self.num_actions))
@@ -239,16 +296,14 @@ class PGIAVI:
                 expert_pi[mask] = 1e-6
                 expert_pi /= expert_pi.sum(dim=1, keepdim=True)
 
-                agent = IAVI(
+                agent = IAVI_GPU(
                     num_states=self.num_states,
                     num_actions=self.num_actions,
                     P=self.P,
                     expert_policy=expert_pi.numpy(),
                     discount=self.discount
                 )
-                iavi_epoch = [1, 2, 3, 4, 5][min(logger_cnt // 5, 4)]
-                latent_delta = agent.train(iavi_epoch)
-                delta = max(delta, latent_delta)
+                latent_delta = agent.train()
                 agents[latent_idx] = agent
             q_time = time.time() - q_start_time
             total_q_time += q_time
