@@ -24,9 +24,9 @@ class IAVI:
         np.fill_diagonal(X, 1.0)
         self.X = X
 
-    def train(self, num_epochs=1):
+    def train(self):
         e = 0
-        while e < num_epochs:
+        while True:
             e += 1
             delta = 0
             for s in range(self.num_states):
@@ -50,8 +50,6 @@ class IAVI:
                 alpha = 0.1
                 self.r[s, :] = alpha * self.r[s, :] + (1 - alpha) * r
                 self.q[s, :] = alpha * self.q[s, :] + (1 - alpha) * (self.r[s, :] + opt_nextv)
-                if s == 0:
-                    print(f"\tState {s}, ite {e}: nmax_r {np.max(self.r[s, :])}, max_q {np.max(self.q[s, :])} delta {delta}")
 
             if delta < self.threshold:
                 break
@@ -270,7 +268,7 @@ class PGIAVI:
                 total_q_time = 0
                 total_other_time = 0
 
-            if (abs(total_loss) < 5e-3 and delta < 3e-3) or (logger_cnt >= 100):
+            if (abs(total_loss) < 5e-3) or (logger_cnt >= 100):
                 final_iteration_time = time.time() - iteration_start_time
                 print(f'Iteration {logger_cnt}, Converged with Loss: {total_loss:.4f}, Total time: {final_iteration_time:.2f}s')
                 break

@@ -21,8 +21,8 @@ if __name__ == '__main__':
 
     num_folds = 5
     num_repeats = args.num_repeats
-    num_states = 384
-    num_actions = 16
+    num_states = 512
+    num_actions = 32
     num_latents = args.num_latents
 
     np.random.seed(args.rand_seed)
@@ -48,7 +48,7 @@ if __name__ == '__main__':
 
     len_trajs = len(trajs)
     kf = KFold(n_splits=num_folds, shuffle=True, random_state=10042)
-    for num_trajs in [len_trajs//3, len_trajs//2, len_trajs]:
+    for num_trajs in [len_trajs, len_trajs//2, len_trajs//3]:
         for kf_idx, (train_idxes, test_idxes) in enumerate(kf.split(trajs[:num_trajs])):
             train_trajs = [trajs[train_idx] for train_idx in train_idxes]
             test_trajs = [trajs[test_idx] for test_idx in test_idxes]
