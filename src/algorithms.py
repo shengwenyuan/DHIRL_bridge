@@ -11,7 +11,7 @@ class IAVI:
     def __init__(self, num_states, num_actions, P, expert_policy, discount, threshold=1e-3):
         self.num_states = num_states
         self.num_actions = num_actions
-        self.P = P
+        self.P = np.transpose(P, (0, 2, 1))
         self.expert_policy = expert_policy
         self.discount = discount
         self.threshold = threshold
@@ -36,18 +36,20 @@ class IAVI:
                 if not np.all(np.isfinite(eta)):
                     print("Non-finite eta detected!")
                 
-                Y = np.zeros(self.num_actions)
-                for a in range(self.num_actions):
-                    eta_a = eta[a]
-                    action_b = [b for b in range(self.num_actions) if b != a]
-                    eta_b = eta[action_b]
-                    Y[a] = eta_a - 1 / (self.num_actions - 1) * np.sum(eta_b)
+                # Y = np.zeros(self.num_actions)
+                # for a in range(self.num_actions):
+                #     eta_a = eta[a]
+                #     action_b = [b for b in range(self.num_actions) if b != a]
+                #     eta_b = eta[action_b]
+                #     Y[a] = eta_a - 1 / (self.num_actions - 1) * np.sum(eta_b)
+                eta_sum = eta.sum(axis=0, keepdims=True)
+                Y = eta - (eta_sum - eta) / (self.num_actions - 1) 
 
                 r = np.linalg.lstsq(self.X, Y, rcond=None)[0]
 
                 delta = max(delta, np.max(np.abs(self.r[s, :] - r)))
 
-                alpha = 0.1
+                alpha = 0.0
                 self.r[s, :] = alpha * self.r[s, :] + (1 - alpha) * r
                 self.q[s, :] = alpha * self.q[s, :] + (1 - alpha) * (self.r[s, :] + opt_nextv)
 
@@ -57,51 +59,64 @@ class IAVI:
         return delta
 
 
-import torch.nn.functional as F
-
 class IAVI_GPU:
-    def __init__(self, num_states, num_actions, P, expert_policy, discount, threshold=1e-3, alpha=0.0, device='cuda'):
+    def __init__(self, num_states, num_actions, P, expert_policy, discount, threshold=1e-3, alpha=0.1, device='cuda'):
         self.num_states = num_states
         self.num_actions = num_actions
-        
-        self.P = torch.as_tensor(P, dtype=torch.float32, device=self.device)
-        self.expert_policy = torch.as_tensor(expert_policy, dtype=torch.float32, device=self.device)
+        self.device = torch.device(device if torch.cuda.is_available() else 'cpu')
+        self.P = torch.as_tensor(P, dtype=torch.float64, device=self.device)
+        self.expert_policy = torch.as_tensor(expert_policy, dtype=torch.float64, device=self.device)
         self.discount = discount
         self.threshold = threshold
         self.epsilon = 1e-6
         self.alpha = alpha
-        self.device = torch.device(device if torch.cuda.is_available() else 'cpu')
+        self.batch_size = num_states
 
-        self.r = torch.randn(self.num_states, self.num_actions, device=self.device)
-        self.q = torch.randn(self.num_states, self.num_actions, device=self.device)
+        self.r = torch.randn(self.num_states, self.num_actions, dtype=torch.float64, device=self.device)
+        self.q = torch.randn(self.num_states, self.num_actions, dtype=torch.float64, device=self.device)
 
-        X = torch.full((self.num_actions, self.num_actions), -1 / (self.num_actions - 1), device=self.device)
+        X = torch.full((self.num_actions, self.num_actions), -1 / (self.num_actions - 1), dtype=torch.float64, device=self.device)
         X.fill_diagonal_(1.0)
         self.X = X
 
     def train(self):
         e = 0
-        while True:
+        while e < 1e5:
             e += 1
+            delta = 0
+            # sampled_indices = torch.randperm(self.num_states, device=self.device)[:self.batch_size]
+            for start_idx in range(0, self.num_states, self.batch_size):
+                end_idx = min(start_idx + self.batch_size, self.num_states)
+                sampled_indices = torch.arange(start_idx, end_idx, device=self.device)
 
-            tp = self.P  # (num_states, num_actions, num_states)
-            max_q = torch.max(self.q, dim=1).values 
-            opt_nextv = self.discount * torch.matmul(tp, max_q.unsqueeze(-1)).squeeze(-1)
-            eta = torch.log(self.expert_policy + self.epsilon) - opt_nextv  # (num_states, num_actions)
-            if not torch.all(torch.isfinite(eta)):
-                print("Non-finite eta detected!")
-            
-            eta_sum = eta.sum(dim=1, keepdim=True)
-            Y = eta - (eta_sum - eta) / (self.num_actions - 1) # (num_states, num_actions)
-            
-            r_new = torch.linalg.lstsq(self.X, Y.T).solution.T  # (num_states, num_actions)
-            delta = torch.max(torch.abs(self.r - r_new)).item()
-            
-            self.r = self.alpha * self.r + (1 - self.alpha) * r_new
-            self.q = self.alpha * self.q + (1 - self.alpha) * (self.r + opt_nextv)
-            
+                tp_batch = self.P[sampled_indices]  # (batch_size, num_actions, num_states)
+                expert_policy_batch = self.expert_policy[sampled_indices]  # (batch_size, num_actions)
+                max_q = torch.max(self.q, dim=1).values
+                opt_nextv_batch = self.discount * torch.matmul(tp_batch, max_q.unsqueeze(-1)).squeeze(-1)
+                eta_batch = torch.log(expert_policy_batch + self.epsilon) - opt_nextv_batch  # (batch_size, num_actions)
+                if not torch.all(torch.isfinite(eta_batch)):
+                    print("Non-finite eta detected!")
+
+                eta_sum = eta_batch.sum(dim=1, keepdim=True)
+                Y_batch = eta_batch - (eta_sum - eta_batch) / (self.num_actions - 1)  # (batch_size, num_actions)
+
+                # must convert to numpy for lstsq
+                tX = self.X.cpu().numpy()
+                tY = Y_batch.cpu().numpy()
+                tr = np.linalg.lstsq(tX, tY.T, rcond=None)[0]
+
+                r_new_batch = torch.as_tensor(tr, dtype=torch.float64, device=self.device).T 
+                delta_batch = torch.max(torch.abs(self.r[sampled_indices] - r_new_batch)).item()
+                delta = max(delta, delta_batch)
+
+                self.r[sampled_indices] = self.alpha * self.r[sampled_indices] + (1 - self.alpha) * r_new_batch
+                self.q[sampled_indices] = self.alpha * self.q[sampled_indices] + (1 - self.alpha) * (self.r[sampled_indices] + opt_nextv_batch)
+
             if delta < self.threshold:
                 break
+
+        if e >= 1e5:
+            raise RuntimeError("IAVI_GPU did not converge within the maximum number of iterations.")
         
         return delta
     
@@ -152,7 +167,7 @@ class PGIAVI:
                                        dropout=0.3)
         self.target_intention_net.load_state_dict(self.intention_net.state_dict())
         self.target_intention_net.eval()
-        self.optimizer = torch.optim.Adam(self.intention_net.parameters(), lr=3e-3)
+        self.optimizer = torch.optim.Adam(self.intention_net.parameters(), lr=5e-3)
 
         self.state_emb = torch.nn.Embedding(self.num_states, 64)
         self.action_emb = torch.nn.Embedding(self.num_actions, 16)
@@ -236,14 +251,15 @@ class PGIAVI:
         uniform_policy = np.full((self.num_states, self.num_actions), 1.0 / self.num_actions)
         agents = []
         for _ in range(self.num_latents):
-            agent = IAVI(
+            # agent = IAVI(
+            agent = IAVI_GPU(
                 num_states=self.num_states,
                 num_actions=self.num_actions,
                 P=self.P,
                 expert_policy=uniform_policy,
                 discount=self.discount
             )
-            # agent.train()
+            agent.train()
             agents.append(agent)
 
         logger_cnt = 0
@@ -296,6 +312,7 @@ class PGIAVI:
                 expert_pi[mask] = 1e-6
                 expert_pi /= expert_pi.sum(dim=1, keepdim=True)
 
+                # agent = IAVI(
                 agent = IAVI_GPU(
                     num_states=self.num_states,
                     num_actions=self.num_actions,
@@ -323,7 +340,7 @@ class PGIAVI:
                 total_q_time = 0
                 total_other_time = 0
 
-            if (abs(total_loss) < 5e-3) or (logger_cnt >= 100):
+            if (abs(total_loss) < 5e-3) or (logger_cnt >= 60):
                 final_iteration_time = time.time() - iteration_start_time
                 print(f'Iteration {logger_cnt}, Converged with Loss: {total_loss:.4f}, Total time: {final_iteration_time:.2f}s')
                 break

@@ -41,8 +41,6 @@ if __name__ == '__main__':
 
     with open('data/trans_probs.npy', 'rb') as f:
         P = np.load(f)
-    P = np.transpose(P, (0, 2, 1))
-    # with open('data/train_trajs.json') as f:
     with open('data/trajs.json') as f:
         trajs = json.load(f)
 
