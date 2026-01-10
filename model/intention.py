@@ -1,8 +1,8 @@
 
-import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.nn.utils.rnn import pad_sequence, pack_padded_sequence, pad_packed_sequence
 
 class IntentionNet(nn.Module):
     def __init__(self, phi_dim, num_latents, hidden_dim=128):
@@ -16,7 +16,7 @@ class IntentionNet(nn.Module):
         x = self._non_linearity(self.fc1(x))
         x = self._non_linearity(self.fc2(x))
         return self.fc3(x)
-    
+
 
 class StatesRNN(nn.Module):
     def __init__(self, phi_dim, num_latents, hidden_dim=128, rnn_hidden_dim=128, num_layers=1, dropout=0.1):
@@ -43,10 +43,16 @@ class StatesRNN(nn.Module):
         
         self.output_proj = nn.Linear(rnn_hidden_dim, num_latents)
 
-    def forward(self, x):
+    def forward(self, x, mask=None):
         # x: (batch_size, seq_len, phi_dim)
         x = F.relu(self.input_proj(x))               # (B, T, hidden_dim)
-        rnn_out, _ = self.rnn(x)                     # (B, T, rnn_hidden_dim)
+        if mask is not None:
+            lengths = mask.sum(dim=1)
+            x_packed = pack_padded_sequence(x, lengths.cpu(), batch_first=True, enforce_sorted=False)
+            rnn_out_packed, _ = self.rnn(x_packed)
+            rnn_out, _ = pad_packed_sequence(rnn_out_packed, batch_first=True)
+        else:
+            rnn_out, _ = self.rnn(x)                     # (B, T, rnn_hidden_dim)
         logits = self.output_proj(rnn_out)           # (B, T, num_latents)
 
         return logits
@@ -67,11 +73,15 @@ class IntentionTransformer(nn.Module):
         self.transformer = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
         self.fc_out = nn.Linear(d_model, num_latents)
 
-    def forward(self, x):
+    def forward(self, x, mask=None):
         # x: (batch_size, seq_len, phi_dim)
         x = self.input_proj(x)            # (B, T, d_model)
         x = self.pos_encoding(x)          # add positional encoding
-        x = self.transformer(x)           # (B, T, d_model)
+        if mask is not None:
+            padding_mask = ~mask
+            x = self.transformer(x, src_key_padding_mask=padding_mask)
+        else:
+            x = self.transformer(x)           # (B, T, d_model)
 
         logits = self.fc_out(x)           # (B, T, num_latents)
         return logits

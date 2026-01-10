@@ -5,7 +5,7 @@ import time
 from scipy.special import logsumexp
 from model.intention import IntentionNet, StatesRNN, IntentionTransformer
 from torch.utils.data import DataLoader, TensorDataset
-from torch.nn.utils.rnn import pad_sequence, pack_padded_sequence, pad_packed_sequence
+
 
 class IAVI:
     def __init__(self, num_states, num_actions, P, expert_policy, discount, threshold=1e-3):
@@ -59,7 +59,7 @@ class IAVI:
         return delta
 
 
-class IAVI_GPU:
+class IAVI_B:
     def __init__(self, num_states, num_actions, P, expert_policy, discount, threshold=1e-3, alpha=0.1, device='cuda'):
         self.num_states = num_states
         self.num_actions = num_actions
@@ -116,7 +116,7 @@ class IAVI_GPU:
                 break
 
         if e >= 1e5:
-            raise RuntimeError("IAVI_GPU did not converge within the maximum number of iterations.")
+            raise RuntimeError("IAVI did not converge within the maximum number of iterations.")
         
         return delta
     
@@ -140,43 +140,59 @@ class PGIAVI:
         self.discount = discount
         self.train_trajs = train_trajs
         self.test_trajs = test_trajs
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         # self.intention_net = IntentionTransformer(phi_dim=self.num_phis, 
         #                                num_latents=self.num_latents, 
         #                                d_model=128, 
         #                                nhead=4,
         #                                num_layers=1,
-        #                                dropout=0.2)
+        #                                dropout=0.2).to(self.device)
         # self.target_intention_net = IntentionTransformer(phi_dim=self.num_phis, 
         #                                num_latents=self.num_latents, 
         #                                d_model=128, 
         #                                nhead=4,
         #                                num_layers=1,
-        #                                dropout=0.2)
+        #                                dropout=0.2).to(self.device)
         self.intention_net = StatesRNN(phi_dim=self.num_phis, 
                                        num_latents=self.num_latents, 
                                        hidden_dim=128, 
                                        rnn_hidden_dim=128, 
                                        num_layers=2,
-                                       dropout=0.3)
+                                       dropout=0.3).to(self.device)
         self.target_intention_net = StatesRNN(phi_dim=self.num_phis, 
                                        num_latents=self.num_latents, 
                                        hidden_dim=128, 
                                        rnn_hidden_dim=128, 
                                        num_layers=2,
-                                       dropout=0.3)
+                                       dropout=0.3).to(self.device)
         self.target_intention_net.load_state_dict(self.intention_net.state_dict())
         self.target_intention_net.eval()
         self.optimizer = torch.optim.Adam(self.intention_net.parameters(), lr=5e-3)
 
-        self.state_emb = torch.nn.Embedding(self.num_states, 64)
-        self.action_emb = torch.nn.Embedding(self.num_actions, 16)
+        self.state_emb = torch.nn.Embedding(self.num_states, 64).to(self.device)
+        self.action_emb = torch.nn.Embedding(self.num_actions, 16).to(self.device)
 
-    def intention_mapping(self, phis, log_pi):
-        f_logits = self.target_intention_net(phis.unsqueeze(0)).squeeze(0)              # (T, K)
-        log_f = torch.log_softmax(f_logits, dim=-1) # TODO: MDP? set explicit prior: intention transition dynamics
-        log_joint = log_f + log_pi.T                # (T, K), log(f_k * π_k) = log P(z_t=k, a_t | s_t, phi_t)
-        log_p_gamma = log_joint - torch.logsumexp(log_joint, dim=-1, keepdim=True)  # (T, K)
+    def intention_mapping(self, batch_phis, batch_log_pi):
+        with torch.no_grad():
+            f_logits = self.target_intention_net(batch_phis)            # (B, T, K)
+            log_f = torch.log_softmax(f_logits, dim=-1) # TODO: MDP? set explicit prior: intention transition dynamics
+            log_joint = log_f + batch_log_pi.T                # (T, K), log(f_k * π_k) = log P(z_t=k, a_t | s_t, phi_t)
+            log_p_gamma = log_joint - torch.logsumexp(log_joint, dim=-1, keepdim=True)  # (T, K)
+
+        return log_p_gamma, log_f, log_joint
+    
+    def intention_batch_mapping(self, batch_phis, batch_log_pi, mask=None):
+        with torch.no_grad():
+            f_logits = self.target_intention_net(batch_phis, mask=mask)                # (B, T_max, K)
+            log_f = torch.log_softmax(f_logits, dim=-1)
+            log_joint = log_f + batch_log_pi
+            log_p_gamma = log_joint - torch.logsumexp(log_joint, dim=-1, keepdim=True) # (B, T_max, K)
+
+            if mask is not None:
+                log_p_gamma = log_p_gamma * mask.unsqueeze(-1)
+                log_f = log_f * mask.unsqueeze(-1)
+                log_joint = log_joint * mask.unsqueeze(-1)
 
         return log_p_gamma, log_f, log_joint
     
@@ -191,13 +207,57 @@ class PGIAVI:
 
         return log_pi
 
+    def get_batch_log_pi(self, trajs, agents):
+        agent_policies = []
+        for agent in agents:
+            pi = torch.softmax(agent.q.float(), dim=-1)  # Boltzmann policy
+            agent_policies.append(pi)
+        agent_policies = torch.stack(agent_policies, dim=0)  # (K, num_states, num_actions)
+        
+        log_pi_list = []
+        phis_lens = []
+        for traj in trajs:
+            T = len(traj)
+            phis_lens.append(T)
+            
+            states = torch.tensor([s for s, a, ns in traj], dtype=torch.long, device=self.device)
+            actions = torch.tensor([a for s, a, ns in traj], dtype=torch.long, device=self.device)
+            log_pi = torch.log(agent_policies[:, states, actions] + 1e-8)  # (K, T)
+            log_pi_list.append(log_pi.T)  # (T, K)
+        
+        # Padding
+        max_len = max(phis_lens)
+        batch_log_pi = torch.zeros(len(trajs), max_len, self.num_latents, device=self.device)
+        for i, log_pi in enumerate(log_pi_list):
+            batch_log_pi[i, :phis_lens[i], :] = log_pi
+        
+        return batch_log_pi
+
     def encode_session_traj(self, traj):
         states = torch.tensor([s for s, a, ns in traj], dtype=torch.long)
         actions = torch.tensor([a for s, a, ns in traj], dtype=torch.long)
-        s_emb = self.state_emb(states).detach()  # (T, )
-        a_emb = self.action_emb(actions).detach()  # (T, )
-        phis = torch.cat([s_emb, a_emb], dim=-1)  # (T, )
+        s_emb = self.state_emb(states).detach()  # (T, E_S)
+        a_emb = self.action_emb(actions).detach()  # (T, E_A)
+        phis = torch.cat([s_emb, a_emb], dim=-1)  # (T, E_S + E_A)
         return phis
+    
+    def encode_batch_trajs(self, trajs):
+        batch_phis = []
+        phis_lens = []
+        for traj in trajs:
+            phis = self.encode_session_traj(traj)
+            batch_phis.append(phis)
+            phis_lens.append(phis.shape[0])
+        
+        max_len = max(phis_lens)
+        batch_phis_padded = torch.zeros(len(batch_phis), max_len, self.num_phis)
+        mask = torch.zeros(len(trajs), max_len, dtype=torch.bool, device=self.device)
+        for i, (phi, seq_len) in enumerate(zip(batch_phis, phis_lens)):
+            batch_phis_padded[i, :seq_len] = phi
+            mask[i, :seq_len] = 1
+        batch_phis = batch_phis_padded  # (B, T, phi_dim)
+
+        return batch_phis, phis_lens, mask
     
     def train_batched(self, batch_phis, batch_target_gamma, num_epochs=1):
         """
@@ -248,55 +308,49 @@ class PGIAVI:
         return np.mean(loss_list)
     
     def fit(self):
+        # * * * Initialize agents with uniform policy * * *
         uniform_policy = np.full((self.num_states, self.num_actions), 1.0 / self.num_actions)
         agents = []
         for _ in range(self.num_latents):
             # agent = IAVI(
-            agent = IAVI_GPU(
+            agent = IAVI_B(
                 num_states=self.num_states,
                 num_actions=self.num_actions,
                 P=self.P,
                 expert_policy=uniform_policy,
-                discount=self.discount
+                discount=self.discount,
+                device=self.device
             )
-            agent.train()
+            # agent.train()
             agents.append(agent)
 
-        logger_cnt = 0
-        total_q_time = 0
-        total_other_time = 0
-        iteration_start_time = time.time()
+        # * * * Encode train trajs * * *
+        batch_phis, phis_lens, bphis_mask = self.encode_batch_trajs(self.train_trajs)
 
+        logger_cnt = 0
+        logstep_exp_time = 0
+        logstep_q_time = 0
+        logstep_intention_time = 0
+        iteration_start_time = time.time()
 
         while True:
             logger_cnt += 1
             
             # * * * E-step: compute posterior * * *
-            log_p_gammas = []
-            batch_phis = []
-            batch_target_gamma = []
-            for traj_idx, traj in enumerate(self.train_trajs):
-                phis = self.encode_session_traj(traj)
-                log_pi = self.get_log_pi(traj, agents)
-                with torch.no_grad():
-                    log_p_gamma, *_ = self.intention_mapping(phis, log_pi)
-                log_p_gammas.append(log_p_gamma)
+            expectation_start_time = time.time()
+            batch_log_pi = self.get_batch_log_pi(self.train_trajs, agents) # (B, K, T)
+            log_p_gammas, *_ = self.intention_batch_mapping(batch_phis, batch_log_pi, bphis_mask)
+            batch_target_gamma = torch.exp(log_p_gammas).detach()
+            expectation_time = time.time() - expectation_start_time
+            logstep_exp_time += expectation_time
+            
+            # # Pad sequences to same length for RNN input
+            # batch_target_gamma_padded = torch.zeros(len(batch_target_gamma), max_len, self.num_latents)
+            # for i, gamma in enumerate(batch_target_gamma):
+            #     seq_len = phis_lens[i]
+            #     batch_target_gamma_padded[i, :seq_len] = gamma
+            # batch_target_gamma = batch_target_gamma_padded.detach().clone()  # (B, T, K)
 
-                batch_phis.append(phis)
-                batch_target_gamma.append(torch.exp(log_p_gamma).detach())
-            
-            # Pad sequences to same length for RNN input
-            max_len = max(phi.shape[0] for phi in batch_phis)
-            batch_phis_padded = torch.zeros(len(batch_phis), max_len, self.num_phis)
-            batch_target_gamma_padded = torch.zeros(len(batch_target_gamma), max_len, self.num_latents)
-            
-            for i, (phi, gamma) in enumerate(zip(batch_phis, batch_target_gamma)):
-                seq_len = phi.shape[0]
-                batch_phis_padded[i, :seq_len] = phi
-                batch_target_gamma_padded[i, :seq_len] = gamma
-            
-            batch_phis = batch_phis_padded  # (B, T, phi_dim)
-            batch_target_gamma = batch_target_gamma_padded.detach().clone()  # (B, T, K)
             dataset = TensorDataset(batch_phis, batch_target_gamma)
             loader = DataLoader(dataset, batch_size=256, shuffle=True)
 
@@ -313,32 +367,36 @@ class PGIAVI:
                 expert_pi /= expert_pi.sum(dim=1, keepdim=True)
 
                 # agent = IAVI(
-                agent = IAVI_GPU(
+                agent = IAVI_B(
                     num_states=self.num_states,
                     num_actions=self.num_actions,
                     P=self.P,
                     expert_policy=expert_pi.numpy(),
-                    discount=self.discount
+                    discount=self.discount,
+                    device=self.device
                 )
-                latent_delta = agent.train()
+                agent.train()
                 agents[latent_idx] = agent
             q_time = time.time() - q_start_time
-            total_q_time += q_time
+            logstep_q_time += q_time
 
             # * * * Update intention network * * *
-            other_start_time = time.time()
+            intention_start_time = time.time()
             # total_loss = self.train_batched(batch_phis, batch_target_gamma, num_epochs=1)
             total_loss = self.train_minibatch(loader, num_epochs=1)
-            other_time = time.time() - other_start_time
-            total_other_time += other_time
+            intention_time = time.time() - intention_start_time
+            logstep_intention_time += intention_time
 
             self.target_intention_net.load_state_dict(self.intention_net.state_dict())
 
             if logger_cnt % 1 == 0:
                 iteration_time = time.time() - iteration_start_time
-                print(f'Iteration {logger_cnt}, Loss: {total_loss:.4f}, Q-update: {total_q_time:.2f}s, NN: {total_other_time:.2f}s, Total: {iteration_time:.2f}s')
-                total_q_time = 0
-                total_other_time = 0
+                print(f'Iteration {logger_cnt}, Loss: {total_loss:.4f}, \n\
+                       \tExpectation: {logstep_exp_time:.2f}s, Q-update: {logstep_q_time:.2f}s, Intention: {logstep_intention_time:.2f}s, \n\
+                       \tTotal: {iteration_time // 60}m, {iteration_time % 60:.2f}s')
+                logstep_exp_time = 0
+                logstep_q_time = 0
+                logstep_intention_time = 0
 
             if (abs(total_loss) < 5e-3) or (logger_cnt >= 60):
                 final_iteration_time = time.time() - iteration_start_time
@@ -349,18 +407,18 @@ class PGIAVI:
         ll = {}
         for ds in ['train', 'test']:
             trajs = eval(f'self.{ds}_trajs')
+            batch_phis_eval, lens_eval, mask_eval = self.encode_batch_trajs(trajs)
+            batch_log_pi_eval, _ = self.get_log_pi_batch(trajs, agents)
+            _, log_f, log_p_joint = self.intention_mapping_batch(batch_phis_eval, batch_log_pi_eval, mask=mask_eval)
+            
+            # Get per-trajectory results
             fs = []
             lls = []
-            for traj_idx, traj in enumerate(trajs):
-                phis = self.encode_session_traj(traj)
-                log_pi = self.get_log_pi(traj, agents)
-                with torch.no_grad():
-                    _, log_f, log_p_joint = self.intention_mapping(phis, log_pi)
-                    log_f = log_f.numpy()
-                    log_p_joint = log_p_joint.numpy()
-                fs.append(np.exp(log_f))
-                # lls.append(logsumexp(log_p_joint, axis=-1).sum()) # whole trajectory LL
-                lls.append(np.mean(logsumexp(log_p_joint, axis=-1))) # per-step LL
+            for i, seq_len in enumerate(lens_eval):
+                f_i = torch.exp(log_f[i, :seq_len, :]).cpu().numpy()
+                log_joint_i = log_p_joint[i, :seq_len, :].cpu().numpy()
+                fs.append(f_i)
+                lls.append(np.mean(logsumexp(log_joint_i, axis=-1)))
             lls = np.mean(np.hstack(lls))
             ll[ds] = np.mean(lls)
             f[ds] = fs
@@ -368,17 +426,17 @@ class PGIAVI:
         return ll, f, agents
 
     def predict(self, trajs, agents):
+        batch_phis, lens, mask = self.encode_batch_trajs(trajs)
+        batch_log_pi, _ = self.get_log_pi_batch(trajs, agents)
+        
+        _, log_f, log_p_joint = self.intention_mapping_batch(batch_phis, batch_log_pi, mask=mask)
+        
         fs = []
         lls = []
-        for traj_idx, traj in enumerate(trajs):
-            phis = self.encode_session_traj(traj)
-            log_pi = self.get_log_pi(traj, agents)
-            with torch.no_grad():
-                _, log_f, log_p_joint = self.intention_mapping(phis, log_pi)
-                log_f = log_f.numpy()
-                log_p_joint = log_p_joint.numpy()
-            fs.append(np.exp(log_f))
-            lls.append(logsumexp(log_p_joint, axis=-1).sum()) # whole trajectory LL
-        lls = np.mean(np.hstack(lls))
+        for i, seq_len in enumerate(lens):
+            f_i = torch.exp(log_f[i, :seq_len, :]).cpu().numpy()
+            log_joint_i = log_p_joint[i, :seq_len, :].cpu().numpy()
+            fs.append(f_i)
+            lls.append(logsumexp(log_joint_i, axis=-1).sum())
         
-        return lls, fs
+        return np.mean(lls), fs
