@@ -234,11 +234,13 @@ class PGIAVI:
         return batch_log_pi
 
     def encode_session_traj(self, traj):
-        states = torch.tensor([s for s, a, ns in traj], dtype=torch.long)
-        actions = torch.tensor([a for s, a, ns in traj], dtype=torch.long)
+        states = torch.tensor([s for s, a, ns in traj], dtype=torch.long, device=self.device)
+        actions = torch.tensor([a for s, a, ns in traj], dtype=torch.long, device=self.device)
+
         s_emb = self.state_emb(states).detach()  # (T, E_S)
         a_emb = self.action_emb(actions).detach()  # (T, E_A)
         phis = torch.cat([s_emb, a_emb], dim=-1)  # (T, E_S + E_A)
+
         return phis
     
     def encode_batch_trajs(self, trajs):
@@ -250,7 +252,7 @@ class PGIAVI:
             phis_lens.append(phis.shape[0])
         
         max_len = max(phis_lens)
-        batch_phis_padded = torch.zeros(len(batch_phis), max_len, self.num_phis)
+        batch_phis_padded = torch.zeros(len(batch_phis), max_len, self.num_phis, device=self.device)
         mask = torch.zeros(len(trajs), max_len, dtype=torch.bool, device=self.device)
         for i, (phi, seq_len) in enumerate(zip(batch_phis, phis_lens)):
             batch_phis_padded[i, :seq_len] = phi

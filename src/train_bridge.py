@@ -21,8 +21,8 @@ if __name__ == '__main__':
 
     num_folds = 5
     num_repeats = args.num_repeats
-    num_states = 384
-    num_actions = 16
+    num_states = 512
+    num_actions = 32
     num_latents = args.num_latents
 
     np.random.seed(args.rand_seed)
