@@ -56,17 +56,19 @@ if __name__ == '__main__':
             for repeats in range(num_repeats):
                 model = PGIAVI(num_latents=num_latents, num_states=num_states, num_actions=num_actions,
                                 train_trajs=train_trajs, test_trajs=test_trajs, P=P, discount=args.discount)
-                ll, f, agents = model.fit()
+                ll, f, mask, agents = model.fit()
                 if ll['test'] > best_test_ll:
                     best_test_ll = ll['test']
                     best_ll = ll
-                    if num_trajs == len_trajs - 1:
+                    if num_trajs == len_trajs:
                         param_dir = os.path.join(output_dir, f'pgiql/{num_trajs}/fold_{kf_idx}')
                         os.makedirs(param_dir, exist_ok=True)
                         np.save(os.path.join(param_dir, f'f_train.npy'), f['train'])
+                        np.save(os.path.join(param_dir, f'mask_train.npy'), mask['train'])
                         np.save(os.path.join(param_dir, f'f_test.npy'), f['test'])
+                        np.save(os.path.join(param_dir, f'mask_test.npy'), mask['test'])
                         for agent_idx, agent in enumerate(agents):
-                            np.save(os.path.join(param_dir, f'r_{agent_idx}.npy'), agent.r)
-                            np.save(os.path.join(param_dir, f'q_{agent_idx}.npy'), agent.q)
+                            np.save(os.path.join(param_dir, f'r_{agent_idx}.npy'), agent.r.cpu().numpy())
+                            np.save(os.path.join(param_dir, f'q_{agent_idx}.npy'), agent.q.cpu().numpy())
             output_df.loc[len(output_df)] = [num_trajs, kf_idx, best_ll['train'], best_ll['test']]
             output_df.to_csv(os.path.join(output_dir, args.ll_filename), index=False)

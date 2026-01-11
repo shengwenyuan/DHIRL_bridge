@@ -43,16 +43,16 @@ class StatesRNN(nn.Module):
         
         self.output_proj = nn.Linear(rnn_hidden_dim, num_latents)
 
-    def forward(self, x, mask=None):
+    def forward(self, x, mask=None, total_length=None):
         # x: (batch_size, seq_len, phi_dim)
-        x = F.relu(self.input_proj(x))               # (B, T, hidden_dim)
+        x = F.relu(self.input_proj(x))               # (B, T_max, hidden_dim)
         if mask is not None:
             lengths = mask.sum(dim=1)
             x_packed = pack_padded_sequence(x, lengths.cpu(), batch_first=True, enforce_sorted=False)
             rnn_out_packed, _ = self.rnn(x_packed)
-            rnn_out, _ = pad_packed_sequence(rnn_out_packed, batch_first=True)
+            rnn_out, _ = pad_packed_sequence(rnn_out_packed, batch_first=True, total_length=total_length)  # (B, T_max, rnn_hidden_dim)
         else:
-            rnn_out, _ = self.rnn(x)                     # (B, T, rnn_hidden_dim)
+            rnn_out, _ = self.rnn(x)
         logits = self.output_proj(rnn_out)           # (B, T, num_latents)
 
         return logits
@@ -73,7 +73,7 @@ class IntentionTransformer(nn.Module):
         self.transformer = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
         self.fc_out = nn.Linear(d_model, num_latents)
 
-    def forward(self, x, mask=None):
+    def forward(self, x, mask=None, total_length=None):
         # x: (batch_size, seq_len, phi_dim)
         x = self.input_proj(x)            # (B, T, d_model)
         x = self.pos_encoding(x)          # add positional encoding

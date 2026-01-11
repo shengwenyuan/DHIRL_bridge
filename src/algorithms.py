@@ -146,96 +146,88 @@ class PGIAVI:
         #                                num_latents=self.num_latents, 
         #                                d_model=128, 
         #                                nhead=4,
-        #                                num_layers=1,
+        #                                num_layers=2,
         #                                dropout=0.2).to(self.device)
         # self.target_intention_net = IntentionTransformer(phi_dim=self.num_phis, 
         #                                num_latents=self.num_latents, 
         #                                d_model=128, 
         #                                nhead=4,
-        #                                num_layers=1,
+        #                                num_layers=2,
         #                                dropout=0.2).to(self.device)
         self.intention_net = StatesRNN(phi_dim=self.num_phis, 
                                        num_latents=self.num_latents, 
                                        hidden_dim=128, 
                                        rnn_hidden_dim=128, 
-                                       num_layers=2,
+                                       num_layers=1,
                                        dropout=0.3).to(self.device)
         self.target_intention_net = StatesRNN(phi_dim=self.num_phis, 
                                        num_latents=self.num_latents, 
                                        hidden_dim=128, 
                                        rnn_hidden_dim=128, 
-                                       num_layers=2,
+                                       num_layers=1,
                                        dropout=0.3).to(self.device)
         self.target_intention_net.load_state_dict(self.intention_net.state_dict())
         self.target_intention_net.eval()
         self.optimizer = torch.optim.Adam(self.intention_net.parameters(), lr=5e-3)
 
-        self.state_emb = torch.nn.Embedding(self.num_states, 64).to(self.device)
-        self.action_emb = torch.nn.Embedding(self.num_actions, 16).to(self.device)
+        self.state_emb = torch.nn.Embedding(self.num_states, 64).to('cpu')
+        self.action_emb = torch.nn.Embedding(self.num_actions, 16).to('cpu')
 
-    def intention_mapping(self, batch_phis, batch_log_pi):
+    def intention_batch_mapping(self, e_loader, total_length):
+        log_p_gammas = []
+        log_fs = []
+        log_joints = []
         with torch.no_grad():
-            f_logits = self.target_intention_net(batch_phis)            # (B, T, K)
-            log_f = torch.log_softmax(f_logits, dim=-1) # TODO: MDP? set explicit prior: intention transition dynamics
-            log_joint = log_f + batch_log_pi.T                # (T, K), log(f_k * π_k) = log P(z_t=k, a_t | s_t, phi_t)
-            log_p_gamma = log_joint - torch.logsumexp(log_joint, dim=-1, keepdim=True)  # (T, K)
+            for batch_phis, batch_log_pi, bphis_mask in e_loader:
+                f_logits = self.target_intention_net(batch_phis.to(self.device), 
+                                                     mask=bphis_mask.to(self.device),
+                                                     total_length=total_length).to('cpu')       # (B, T_max, K)
+                log_f = torch.log_softmax(f_logits, dim=-1)
+                log_joint = log_f + batch_log_pi
+                log_p_gamma = log_joint - torch.logsumexp(log_joint, dim=-1, keepdim=True) # (B, T_max, K)
 
-        return log_p_gamma, log_f, log_joint
-    
-    def intention_batch_mapping(self, batch_phis, batch_log_pi, mask=None):
-        with torch.no_grad():
-            f_logits = self.target_intention_net(batch_phis, mask=mask)                # (B, T_max, K)
-            log_f = torch.log_softmax(f_logits, dim=-1)
-            log_joint = log_f + batch_log_pi
-            log_p_gamma = log_joint - torch.logsumexp(log_joint, dim=-1, keepdim=True) # (B, T_max, K)
+                if bphis_mask is not None:
+                    log_p_gamma = log_p_gamma * bphis_mask.unsqueeze(-1)
+                    log_f = log_f * bphis_mask.unsqueeze(-1)
+                    log_joint = log_joint * bphis_mask.unsqueeze(-1)
 
-            if mask is not None:
-                log_p_gamma = log_p_gamma * mask.unsqueeze(-1)
-                log_f = log_f * mask.unsqueeze(-1)
-                log_joint = log_joint * mask.unsqueeze(-1)
+                log_p_gammas.append(log_p_gamma)
+                log_fs.append(log_f)
+                log_joints.append(log_joint)
 
-        return log_p_gamma, log_f, log_joint
-    
-    def get_log_pi(self, traj, agents):
-        log_pi = torch.zeros((self.num_latents, len(traj)))
-
-        for latent_idx, agent in enumerate(agents):
-            q = torch.as_tensor(agent.q, dtype=torch.float32)
-            pi = torch.softmax(q, dim=-1)
-            for t, (s, a, ns) in enumerate(traj):
-                log_pi[latent_idx, t] = torch.log(pi[s, a] + 1e-8)
-
-        return log_pi
+        return torch.concatenate(log_p_gammas, axis=0).to('cpu'), \
+               torch.concatenate(log_fs, axis=0).to('cpu'), \
+               torch.concatenate(log_joints, axis=0).to('cpu')
 
     def get_batch_log_pi(self, trajs, agents):
         agent_policies = []
         for agent in agents:
-            pi = torch.softmax(agent.q.float(), dim=-1)  # Boltzmann policy
+            pi = torch.softmax(agent.q.to('cpu'), dim=-1)  # Boltzmann policy
             agent_policies.append(pi)
         agent_policies = torch.stack(agent_policies, dim=0)  # (K, num_states, num_actions)
-        
+
         log_pi_list = []
         phis_lens = []
         for traj in trajs:
             T = len(traj)
             phis_lens.append(T)
-            
-            states = torch.tensor([s for s, a, ns in traj], dtype=torch.long, device=self.device)
-            actions = torch.tensor([a for s, a, ns in traj], dtype=torch.long, device=self.device)
+
+            states = torch.tensor([s for s, a, ns in traj], dtype=torch.long, device='cpu')
+            actions = torch.tensor([a for s, a, ns in traj], dtype=torch.long, device='cpu')
             log_pi = torch.log(agent_policies[:, states, actions] + 1e-8)  # (K, T)
             log_pi_list.append(log_pi.T)  # (T, K)
         
         # Padding
         max_len = max(phis_lens)
-        batch_log_pi = torch.zeros(len(trajs), max_len, self.num_latents, device=self.device)
+        batch_log_pi = torch.zeros((len(trajs), max_len, self.num_latents), dtype=torch.float32, device='cpu')
         for i, log_pi in enumerate(log_pi_list):
             batch_log_pi[i, :phis_lens[i], :] = log_pi
         
         return batch_log_pi
 
     def encode_session_traj(self, traj):
-        states = torch.tensor([s for s, a, ns in traj], dtype=torch.long, device=self.device)
-        actions = torch.tensor([a for s, a, ns in traj], dtype=torch.long, device=self.device)
+        states = torch.tensor([s for s, a, ns in traj], dtype=torch.long, device='cpu')
+        actions = torch.tensor([a for s, a, ns in traj], dtype=torch.long, device='cpu')
 
         s_emb = self.state_emb(states).detach()  # (T, E_S)
         a_emb = self.action_emb(actions).detach()  # (T, E_A)
@@ -252,40 +244,16 @@ class PGIAVI:
             phis_lens.append(phis.shape[0])
         
         max_len = max(phis_lens)
-        batch_phis_padded = torch.zeros(len(batch_phis), max_len, self.num_phis, device=self.device)
-        mask = torch.zeros(len(trajs), max_len, dtype=torch.bool, device=self.device)
-        for i, (phi, seq_len) in enumerate(zip(batch_phis, phis_lens)):
-            batch_phis_padded[i, :seq_len] = phi
+        batch_phis_padded = torch.zeros((len(batch_phis), max_len, self.num_phis), dtype=torch.float32, device='cpu')
+        mask = torch.zeros((len(trajs), max_len), dtype=torch.bool, device='cpu')
+        for i, (phis, seq_len) in enumerate(zip(batch_phis, phis_lens)):
+            batch_phis_padded[i, :seq_len] = phis
             mask[i, :seq_len] = 1
         batch_phis = batch_phis_padded  # (B, T, phi_dim)
 
-        return batch_phis, phis_lens, mask
+        return batch_phis, mask
     
-    def train_batched(self, batch_phis, batch_target_gamma, num_epochs=1):
-        """
-        :param agents: List of IAVI agents
-        :param num_epochs: Number of passes through the data
-        """
-        total_loss = 0
-        for epoch in range(num_epochs):
-            self.optimizer.zero_grad()
-            
-            pred_logits = self.intention_net(batch_phis)  # (B, T, K)
-            pred_logf = torch.log_softmax(pred_logits, dim=-1)  # (B, T, K)
-            
-            # Compute loss: negative log-likelihood
-            loss = -(batch_target_gamma * pred_logf).sum(dim=-1).mean()
-            # ce_loss = -(batch_target_gamma * pred_logf).sum(-1).mean()
-            # entropy = -(pred_logf * torch.exp(pred_logf)).sum(-1).mean()
-            # loss = ce_loss - 0.02 * entropy
-            
-            loss.backward()
-            self.optimizer.step()
-            total_loss += loss.item()
-
-        return total_loss / num_epochs
-
-    def train_minibatch(self, loader, num_epochs=1):
+    def train_minibatch(self, m_loader, total_length, num_epochs=1):
         """
         :param agents: List of IAVI agents
         :param num_epochs: Number of passes through the data
@@ -293,15 +261,15 @@ class PGIAVI:
         loss_list = []
         for epoch in range(num_epochs):
             total_loss = 0
-            for batch_phis, batch_target_gamma in loader:
+            for batch_phis, batch_target_gamma, batch_mask in m_loader:
                 self.optimizer.zero_grad()
-                
-                pred_logits = self.intention_net(batch_phis)  # (B, T, K)
+
+                pred_logits = self.intention_net(batch_phis.to(self.device), mask=batch_mask.to(self.device), total_length=total_length)  # (B, T, K)
                 pred_logf = torch.log_softmax(pred_logits, dim=-1)  # (B, T, K)
                 
                 # Compute loss: negative log-likelihood
-                loss = -(batch_target_gamma * pred_logf).sum(dim=-1).mean()
-                
+                loss = -(batch_target_gamma.to(self.device) * pred_logf * batch_mask.to(self.device).unsqueeze(-1)).sum(dim=-1).mean()
+
                 loss.backward()
                 self.optimizer.step()
                 total_loss += loss.item()
@@ -314,7 +282,6 @@ class PGIAVI:
         uniform_policy = np.full((self.num_states, self.num_actions), 1.0 / self.num_actions)
         agents = []
         for _ in range(self.num_latents):
-            # agent = IAVI(
             agent = IAVI_B(
                 num_states=self.num_states,
                 num_actions=self.num_actions,
@@ -323,11 +290,12 @@ class PGIAVI:
                 discount=self.discount,
                 device=self.device
             )
-            # agent.train()
+            agent.train()
             agents.append(agent)
 
         # * * * Encode train trajs * * *
-        batch_phis, phis_lens, bphis_mask = self.encode_batch_trajs(self.train_trajs)
+        batch_phis, bphis_mask = self.encode_batch_trajs(self.train_trajs)
+        max_len = batch_phis.shape[1]
 
         logger_cnt = 0
         logstep_exp_time = 0
@@ -337,26 +305,24 @@ class PGIAVI:
 
         while True:
             logger_cnt += 1
-            
+
+
             # * * * E-step: compute posterior * * *
             expectation_start_time = time.time()
             batch_log_pi = self.get_batch_log_pi(self.train_trajs, agents) # (B, K, T)
-            log_p_gammas, *_ = self.intention_batch_mapping(batch_phis, batch_log_pi, bphis_mask)
+
+            e_dataset = TensorDataset(batch_phis, batch_log_pi, bphis_mask)
+            e_loader = DataLoader(e_dataset, batch_size=1024, shuffle=False)
+            log_p_gammas, *_ = self.intention_batch_mapping(e_loader, max_len)
             batch_target_gamma = torch.exp(log_p_gammas).detach()
             expectation_time = time.time() - expectation_start_time
             logstep_exp_time += expectation_time
-            
-            # # Pad sequences to same length for RNN input
-            # batch_target_gamma_padded = torch.zeros(len(batch_target_gamma), max_len, self.num_latents)
-            # for i, gamma in enumerate(batch_target_gamma):
-            #     seq_len = phis_lens[i]
-            #     batch_target_gamma_padded[i, :seq_len] = gamma
-            # batch_target_gamma = batch_target_gamma_padded.detach().clone()  # (B, T, K)
 
-            dataset = TensorDataset(batch_phis, batch_target_gamma)
-            loader = DataLoader(dataset, batch_size=256, shuffle=True)
 
             # * * * Update Q-value & policies * * *
+            m_dataset = TensorDataset(batch_phis, batch_target_gamma, bphis_mask)
+            m_loader = DataLoader(m_dataset, batch_size=256, shuffle=True)
+
             q_start_time = time.time()
             for latent_idx in range(self.num_latents):
                 expert_pi = torch.zeros((self.num_states, self.num_actions))
@@ -368,7 +334,6 @@ class PGIAVI:
                 expert_pi[mask] = 1e-6
                 expert_pi /= expert_pi.sum(dim=1, keepdim=True)
 
-                # agent = IAVI(
                 agent = IAVI_B(
                     num_states=self.num_states,
                     num_actions=self.num_actions,
@@ -385,7 +350,7 @@ class PGIAVI:
             # * * * Update intention network * * *
             intention_start_time = time.time()
             # total_loss = self.train_batched(batch_phis, batch_target_gamma, num_epochs=1)
-            total_loss = self.train_minibatch(loader, num_epochs=1)
+            total_loss = self.train_minibatch(m_loader, max_len, num_epochs=1)
             intention_time = time.time() - intention_start_time
             logstep_intention_time += intention_time
 
@@ -395,7 +360,7 @@ class PGIAVI:
                 iteration_time = time.time() - iteration_start_time
                 print(f'Iteration {logger_cnt}, Loss: {total_loss:.4f}, \n\
                        \tExpectation: {logstep_exp_time:.2f}s, Q-update: {logstep_q_time:.2f}s, Intention: {logstep_intention_time:.2f}s, \n\
-                       \tTotal: {iteration_time // 60}m, {iteration_time % 60:.2f}s')
+                       \tTotal: {int(iteration_time // 60):d}m, {int(iteration_time % 60):d}s')
                 logstep_exp_time = 0
                 logstep_q_time = 0
                 logstep_intention_time = 0
@@ -407,38 +372,48 @@ class PGIAVI:
 
         f = {}
         ll = {}
+        mask = {}
         for ds in ['train', 'test']:
             trajs = eval(f'self.{ds}_trajs')
-            batch_phis_eval, lens_eval, mask_eval = self.encode_batch_trajs(trajs)
-            batch_log_pi_eval, _ = self.get_log_pi_batch(trajs, agents)
-            _, log_f, log_p_joint = self.intention_mapping_batch(batch_phis_eval, batch_log_pi_eval, mask=mask_eval)
+            batch_phis_eval, mask_eval = self.encode_batch_trajs(trajs)
+            max_len_eval = batch_phis_eval.shape[1]
+            batch_log_pi_eval = self.get_batch_log_pi(trajs, agents)
+
+            eval_dataset = TensorDataset(batch_phis_eval, batch_log_pi_eval, mask_eval)
+            eval_loader = DataLoader(eval_dataset, batch_size=1024, shuffle=False)
+            _, log_f, log_p_joint = self.intention_batch_mapping(eval_loader, max_len_eval)
             
             # Get per-trajectory results
             fs = []
             lls = []
-            for i, seq_len in enumerate(lens_eval):
-                f_i = torch.exp(log_f[i, :seq_len, :]).cpu().numpy()
+            for i, seq_len in enumerate(mask_eval.sum(dim=1)):
+                f_i = torch.exp(log_f[i, :, :]).cpu().numpy()
                 log_joint_i = log_p_joint[i, :seq_len, :].cpu().numpy()
                 fs.append(f_i)
                 lls.append(np.mean(logsumexp(log_joint_i, axis=-1)))
             lls = np.mean(np.hstack(lls))
             ll[ds] = np.mean(lls)
             f[ds] = fs
+            mask[ds] = mask_eval.cpu().numpy()
 
-        return ll, f, agents
+        return ll, f, mask, agents
 
     def predict(self, trajs, agents):
-        batch_phis, lens, mask = self.encode_batch_trajs(trajs)
-        batch_log_pi, _ = self.get_log_pi_batch(trajs, agents)
-        
-        _, log_f, log_p_joint = self.intention_mapping_batch(batch_phis, batch_log_pi, mask=mask)
-        
+        batch_phis, mask = self.encode_batch_trajs(trajs)
+        max_len = batch_phis.shape[1]
+        batch_log_pi, _ = self.get_batch_log_pi(trajs, agents)
+
+        eval_dataset = TensorDataset(batch_phis, batch_log_pi, mask)
+        eval_loader = DataLoader(eval_dataset, batch_size=1024, shuffle=False)
+        _, log_f, log_p_joint = self.intention_batch_mapping(eval_loader, max_len)
+
         fs = []
         lls = []
-        for i, seq_len in enumerate(lens):
+        for i, seq_len in enumerate(mask.sum(dim=1)):
             f_i = torch.exp(log_f[i, :seq_len, :]).cpu().numpy()
             log_joint_i = log_p_joint[i, :seq_len, :].cpu().numpy()
             fs.append(f_i)
-            lls.append(logsumexp(log_joint_i, axis=-1).sum())
+            lls.append(np.mean(logsumexp(log_joint_i, axis=-1)))
+        lls = np.mean(np.hstack(lls))
         
         return np.mean(lls), fs
