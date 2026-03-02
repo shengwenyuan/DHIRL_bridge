@@ -6,10 +6,10 @@ root = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(root, 'trajs.json')) as f:
     trajs = json.load(f)
 
-num_states = 384
-num_actions = 16
+num_states = 768
+num_actions = 32
 
-counts = np.zeros((num_states, num_actions, num_states), dtype=np.int8)
+counts = np.zeros((num_states, num_actions, num_states), dtype=np.int16)
 
 for traj in trajs:
     traj_array = np.array(traj)
