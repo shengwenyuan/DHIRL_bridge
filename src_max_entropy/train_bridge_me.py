@@ -46,7 +46,8 @@ if __name__ == '__main__':
     len_trajs = len(trajs)
     kf = KFold(n_splits=num_folds, shuffle=True, random_state=10042)
 
-    for num_trajs in [len_trajs, len_trajs // 2, len_trajs // 3]:
+    # for num_trajs in [len_trajs, len_trajs // 2, len_trajs // 3]:
+    for num_trajs in [len_trajs]:
         for kf_idx, (train_idxes, test_idxes) in enumerate(kf.split(trajs[:num_trajs])):
             train_trajs = [trajs[i] for i in train_idxes]
             test_trajs = [trajs[i] for i in test_idxes]
