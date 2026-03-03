@@ -170,8 +170,8 @@ class PGIAVI:
         self.target_intention_net.eval()
         self.optimizer = torch.optim.Adam(self.intention_net.parameters(), lr=3e-3)
 
-        self.state_emb = torch.nn.Embedding(self.num_states, 64).to('cpu')
-        self.action_emb = torch.nn.Embedding(self.num_actions, 16).to('cpu')
+        self.state_emb = torch.nn.Embedding(self.num_states, 64)
+        self.action_emb = torch.nn.Embedding(self.num_actions, 16)
 
     def intention_batch_mapping(self, e_loader, total_length):
         log_p_gammas = []

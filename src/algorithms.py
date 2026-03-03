@@ -158,20 +158,20 @@ class PGIAVI:
                                        num_latents=self.num_latents, 
                                        hidden_dim=128, 
                                        rnn_hidden_dim=128, 
-                                       num_layers=1,
+                                       num_layers=2,
                                        dropout=0.3).to(self.device)
         self.target_intention_net = StatesRNN(phi_dim=self.num_phis, 
                                        num_latents=self.num_latents, 
                                        hidden_dim=128, 
                                        rnn_hidden_dim=128, 
-                                       num_layers=1,
+                                       num_layers=2,
                                        dropout=0.3).to(self.device)
         self.target_intention_net.load_state_dict(self.intention_net.state_dict())
         self.target_intention_net.eval()
         self.optimizer = torch.optim.Adam(self.intention_net.parameters(), lr=5e-3)
 
-        self.state_emb = torch.nn.Embedding(self.num_states, 64).to('cpu')
-        self.action_emb = torch.nn.Embedding(self.num_actions, 16).to('cpu')
+        self.state_emb = torch.nn.Embedding(self.num_states, 64)
+        self.action_emb = torch.nn.Embedding(self.num_actions, 16)
 
     def intention_batch_mapping(self, e_loader, total_length):
         log_p_gammas = []
@@ -325,7 +325,7 @@ class PGIAVI:
 
             q_start_time = time.time()
             for latent_idx in range(self.num_latents):
-                expert_pi = torch.zeros((self.num_states, self.num_actions))
+                expert_pi = torch.zeros((self.num_states, self.num_actions), device='cpu')
                 for traj_idx, traj in enumerate(self.train_trajs):
                     weights = batch_target_gamma[traj_idx][:, latent_idx]
                     for t, (s, a, ns) in enumerate(traj):
@@ -349,8 +349,8 @@ class PGIAVI:
 
             # * * * Update intention network * * *
             intention_start_time = time.time()
-            # total_loss = self.train_batched(batch_phis, batch_target_gamma, num_epochs=1)
             total_loss = self.train_minibatch(m_loader, max_len, num_epochs=1)
+            # total_loss = self.train_minibatch(m_loader, max_len, num_epochs=5)
             intention_time = time.time() - intention_start_time
             logstep_intention_time += intention_time
 
