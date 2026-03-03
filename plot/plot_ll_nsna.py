@@ -1,9 +1,3 @@
-#!/usr/bin/env python3
-"""
-Visualize test log-likelihood from ll_*.csv of all (ns, na) cases as boxplots.
-Handles error cases (missing/invalid csv) so they are visible in the plot.
-"""
-
 import os
 import re
 import argparse
@@ -52,34 +46,27 @@ def discover_output_cases(output_base):
 
 
 def load_test_ll_for_case(output_case_dir, ll_metric='test_ll', use_largest_num_trajs=True):
-    """
-    Load all ll_*.csv in output_case_dir and return array of test_ll (or train_ll).
-    If use_largest_num_trajs: one value per fold for the largest num_trajs only (5 values).
-    Otherwise: all test_ll values from the csv (15 = 3 num_trajs x 5 folds).
-    Returns (values_array, error_message). values_array is None on error.
-    """
     if not os.path.isdir(output_case_dir):
         return None, "directory missing"
-    csvs = [f for f in os.listdir(output_case_dir) if f.startswith('ll_') and f.endswith('.csv')]
-    if not csvs:
-        return None, "no ll_*.csv"
-    all_values = []
-    for fname in sorted(csvs):
-        path = os.path.join(output_case_dir, fname)
-        try:
-            df = pd.read_csv(path)
-        except Exception as e:
-            return None, f"read error: {e}"
-        if ll_metric not in df.columns:
-            return None, f"missing column '{ll_metric}'"
-        if use_largest_num_trajs and 'num_trajs' in df.columns:
-            max_trajs = df['num_trajs'].max()
-            df = df[df['num_trajs'] == max_trajs]
-        vals = df[ll_metric].dropna().values
-        if len(vals) == 0:
-            return None, "no valid values"
-        all_values.extend(vals.tolist())
-    return np.array(all_values), None
+    csv_path = os.path.join(output_case_dir, 'll_pgiql.csv')
+    if not os.path.isfile(csv_path):
+        return None, "missing ll_pgiql.csv"
+
+    try:
+        df = pd.read_csv(csv_path)
+    except Exception as e:
+        return None, f"read error: {e}"
+
+    if ll_metric not in df.columns:
+        return None, f"missing column '{ll_metric}'"
+
+    vals = df[ll_metric].dropna().values
+    if len(vals) == 0:
+        return None, "no valid values"
+
+    # We plot NEGATIVE log-likelihood as requested.
+    neg_vals = -np.array(vals, dtype=float)
+    return neg_vals, None
 
 
 def main():
@@ -96,6 +83,10 @@ def main():
     parser.add_argument('--out', type=str, default=None,
                         help='Save figure path (default: plot/ll_nsna_boxplot.png)')
     parser.add_argument('--title', type=str, default='Test log-likelihood by case (NS/NA)')
+    parser.add_argument('--ns', type=int, nargs='*', default=[448, 480, 512, 544, 768],
+                        help='Optional list of num_states values to include (e.g. --ns 480 512)')
+    parser.add_argument('--na', type=int, nargs='*', default=[32],
+                        help='Optional list of num_actions values to include (e.g. --na 32)')
     args = parser.parse_args()
 
     # Determine full case list: expected from data_autotest, then add any from output dirs
@@ -111,8 +102,15 @@ def main():
     else:
         cases = from_dirs
 
+    # Optional manual filtering of which cases to show
+    if args.ns is not None:
+        cases = [c for c in cases if c[0] in args.ns]
+    if args.na is not None:
+        cases = [c for c in cases if c[1] in args.na]
+
     if not cases:
-        print("No cases found. Check --output_base and --data_autotest.")
+        print("No cases found after applying filters. "
+              "Check --output_base / --data_autotest / --ns / --na.")
         return
 
     labels = [f"{ns}/{na}" for ns, na in cases]
@@ -156,7 +154,7 @@ def main():
 
     ax.set_xticks(positions)
     ax.set_xticklabels(labels, rotation=45, ha='right')
-    ax.set_ylabel(args.metric.replace('_', ' ').title())
+    ax.set_ylabel('Negative log-likelihood')
     ax.set_xlabel('Case (num_states / num_actions)')
     ax.set_title(args.title)
 
