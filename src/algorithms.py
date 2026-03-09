@@ -1,6 +1,7 @@
 import numpy as np
-import torch
 import time
+import torch
+import torch.nn.functional as F
 
 from scipy.special import logsumexp
 from model.intention import IntentionNet, StatesRNN, IntentionTransformer
@@ -135,7 +136,7 @@ class PGIAVI:
         self.num_latents = num_latents  # K
         self.num_states = num_states
         self.num_actions = num_actions
-        self.num_phis = 80              # φ
+        self.num_phis = num_states + num_actions      # φ
         self.P = P                      # env trans
         self.discount = discount
         self.train_trajs = train_trajs
@@ -158,20 +159,17 @@ class PGIAVI:
                                        num_latents=self.num_latents, 
                                        hidden_dim=128, 
                                        rnn_hidden_dim=128, 
-                                       num_layers=2,
+                                       num_layers=1,
                                        dropout=0.3).to(self.device)
         self.target_intention_net = StatesRNN(phi_dim=self.num_phis, 
                                        num_latents=self.num_latents, 
                                        hidden_dim=128, 
                                        rnn_hidden_dim=128, 
-                                       num_layers=2,
+                                       num_layers=1,
                                        dropout=0.3).to(self.device)
         self.target_intention_net.load_state_dict(self.intention_net.state_dict())
         self.target_intention_net.eval()
-        self.optimizer = torch.optim.Adam(self.intention_net.parameters(), lr=5e-3)
-
-        self.state_emb = torch.nn.Embedding(self.num_states, 64)
-        self.action_emb = torch.nn.Embedding(self.num_actions, 16)
+        self.optimizer = torch.optim.Adam(self.intention_net.parameters(), lr=3e-3)
 
     def intention_batch_mapping(self, e_loader, total_length):
         log_p_gammas = []
@@ -226,11 +224,11 @@ class PGIAVI:
         return batch_log_pi
 
     def encode_session_traj(self, traj):
-        states = torch.tensor([s for s, a, ns in traj], dtype=torch.long, device='cpu')
-        actions = torch.tensor([a for s, a, ns in traj], dtype=torch.long, device='cpu')
+        states = torch.tensor([s for s, a, ns in traj], dtype=torch.long)
+        actions = torch.tensor([a for s, a, ns in traj], dtype=torch.long)
 
-        s_emb = self.state_emb(states).detach()  # (T, E_S)
-        a_emb = self.action_emb(actions).detach()  # (T, E_A)
+        s_emb = F.one_hot(states, num_classes=self.num_states).float()  # (T, num_states)
+        a_emb = F.one_hot(actions, num_classes=self.num_actions).float()  # (T, num_actions)
         phis = torch.cat([s_emb, a_emb], dim=-1)  # (T, E_S + E_A)
 
         return phis
@@ -356,7 +354,7 @@ class PGIAVI:
 
             self.target_intention_net.load_state_dict(self.intention_net.state_dict())
 
-            if logger_cnt % 1 == 0:
+            if logger_cnt % 4 == 0:
                 iteration_time = time.time() - iteration_start_time
                 print(f'Iteration {logger_cnt}, Loss: {total_loss:.4f}, \n\
                        \tExpectation: {logstep_exp_time:.2f}s, Q-update: {logstep_q_time:.2f}s, Intention: {logstep_intention_time:.2f}s, \n\
@@ -365,7 +363,7 @@ class PGIAVI:
                 logstep_q_time = 0
                 logstep_intention_time = 0
 
-            if (abs(total_loss) < 5e-3) or (logger_cnt >= 60):
+            if (abs(total_loss) < 1e-2) or (logger_cnt >= 100):
                 final_iteration_time = time.time() - iteration_start_time
                 print(f'Iteration {logger_cnt}, Converged with Loss: {total_loss:.4f}, Total time: {final_iteration_time:.2f}s')
                 break
