@@ -21,7 +21,7 @@ if __name__ == '__main__':
 
     num_folds = 5
     num_repeats = args.num_repeats
-    num_states = 768
+    num_states = 448
     num_actions = 32
     num_latents = args.num_latents
 

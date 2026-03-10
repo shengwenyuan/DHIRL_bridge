@@ -19,12 +19,13 @@ class IntentionNet(nn.Module):
 
 
 class StatesRNN(nn.Module):
-    def __init__(self, phi_dim, num_latents, hidden_dim=128, rnn_hidden_dim=128, num_layers=1, dropout=0.1):
+    def __init__(self, num_states, num_actions, num_latents, hidden_dim=128, rnn_hidden_dim=128, num_layers=1, dropout=0.1):
         super(StatesRNN, self).__init__()
         self.rnn_hidden_dim = rnn_hidden_dim
         self.num_layers = num_layers
-        
-        self.input_proj = nn.Linear(phi_dim, hidden_dim)
+
+        self.state_embed = nn.Embedding(num_states, hidden_dim)
+        self.action_embed = nn.Embedding(num_actions, hidden_dim)
         
         self.rnn = nn.RNN(
             input_size=hidden_dim,
@@ -43,9 +44,10 @@ class StatesRNN(nn.Module):
         
         self.output_proj = nn.Linear(rnn_hidden_dim, num_latents)
 
-    def forward(self, x, mask=None, total_length=None):
-        # x: (batch_size, seq_len, phi_dim)
-        x = F.relu(self.input_proj(x))               # (B, T_max, hidden_dim)
+    def forward(self, bs, ba, mask=None, total_length=None):
+        state_embeds = self.state_embed(bs)   # (B, T, hidden_dim)
+        action_embeds = self.action_embed(ba) # (B, T, hidden_dim)
+        x = state_embeds + action_embeds       # (B, T, hidden_dim)
         if mask is not None:
             lengths = mask.sum(dim=1)
             x_packed = pack_padded_sequence(x, lengths.cpu(), batch_first=True, enforce_sorted=False)
@@ -59,23 +61,27 @@ class StatesRNN(nn.Module):
     
 
 class IntentionTransformer(nn.Module):
-    def __init__(self, 
-                 phi_dim, 
-                 num_latents, 
-                 d_model=128, 
-                 nhead=4, 
-                 num_layers=2, 
+    def __init__(self,
+                 num_states,
+                 num_actions,
+                 num_latents,
+                 d_model=128,
+                 nhead=4,
+                 num_layers=2,
                  dropout=0.1):
         super().__init__()
-        self.input_proj = nn.Linear(phi_dim, d_model)
+        self.state_embed = nn.Embedding(num_states, d_model)
+        self.action_embed = nn.Embedding(num_actions, d_model)
         self.pos_encoding = PositionalEncoding(d_model, dropout)
         encoder_layer = nn.TransformerEncoderLayer(d_model=d_model, nhead=nhead, dropout=dropout, batch_first=True)
         self.transformer = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
         self.fc_out = nn.Linear(d_model, num_latents)
 
-    def forward(self, x, mask=None, total_length=None):
-        # x: (batch_size, seq_len, phi_dim)
-        x = self.input_proj(x)            # (B, T, d_model)
+    def forward(self, bs, ba, mask=None, total_length=None):
+        # bs: (B, T), ba: (B, T)
+        state_embeds = self.state_embed(bs)   # (B, T, d_model)
+        action_embeds = self.action_embed(ba) # (B, T, d_model)
+        x = state_embeds + action_embeds       # (B, T, d_model)
         x = self.pos_encoding(x)          # add positional encoding
         if mask is not None:
             padding_mask = ~mask
