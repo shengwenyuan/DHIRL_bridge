@@ -1,7 +1,5 @@
 """
-Autotest variant: build trans_probs_NS_NA.npy from trajs_NS_NA.json.
-Use with --num_states and --num_actions.
-All paths are under data_autotest/ (same dir as this script).
+python build_trans_autotest.py --num_states NS --num_actions NA --subdir SUBDIR
 """
 import numpy as np
 import json
@@ -15,11 +13,12 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--num_states', type=int, required=True, help='NS (number of states)')
     parser.add_argument('--num_actions', type=int, required=True, help='NA (number of actions)')
+    parser.add_argument('--subdir', type=str, required=True, help='Subdirectory containing trajectory files')
     args = parser.parse_args()
     num_states = args.num_states
     num_actions = args.num_actions
 
-    trajs_path = os.path.join(root, f'trajs_{num_states}_{num_actions}.json')
+    trajs_path = os.path.join(root, args.subdir, f'trajs_{num_states}_{num_actions}.json')
     with open(trajs_path) as f:
         trajs = json.load(f)
 
@@ -42,7 +41,7 @@ def main():
             if total_count > 0:
                 transition_probs[s, a, :] = counts[s, a, :] / total_count
 
-    out_path = os.path.join(root, f'trans_probs_{num_states}_{num_actions}.npy')
+    out_path = os.path.join(root, args.subdir, f'trans_probs_{num_states}_{num_actions}.npy')
     np.save(out_path, transition_probs)
 
     print(f"Transition probability matrix shape: {transition_probs.shape}")
