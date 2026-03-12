@@ -3,7 +3,7 @@ import torch
 import time
 
 from scipy.special import logsumexp
-from model.intention import IntentionNet, StatesRNN, IntentionTransformer
+from model.intention import IntentionNet, IntentionRNN, IntentionTransformer
 # from torch.nn.utils.rnn import pad_sequence, pack_padded_sequence, pad_packed_sequence
 
 class IAVI:
@@ -87,13 +87,13 @@ class PGIAVI:
         #                                nhead=4,
         #                                num_layers=1,
         #                                dropout=0.2)
-        self.intention_net = StatesRNN(phi_dim=self.num_phis, 
+        self.intention_net = IntentionRNN(phi_dim=self.num_phis, 
                                        num_latents=self.num_latents, 
                                        hidden_dim=128, 
                                        rnn_hidden_dim=128, 
                                        num_layers=1,
                                        dropout=0.3)
-        self.target_intention_net = StatesRNN(phi_dim=self.num_phis, 
+        self.target_intention_net = IntentionRNN(phi_dim=self.num_phis, 
                                        num_latents=self.num_latents, 
                                        hidden_dim=128, 
                                        rnn_hidden_dim=128, 

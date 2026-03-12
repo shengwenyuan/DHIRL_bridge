@@ -4,7 +4,7 @@ import torch
 import torch.nn.functional as F
 
 from scipy.special import logsumexp
-from model.intention import IntentionNet, StatesRNN, IntentionTransformer
+from model.intention import IntentionNet, IntentionRNN, IntentionLSTM, IntentionTransformer
 from torch.utils.data import DataLoader, TensorDataset
 
 
@@ -104,14 +104,14 @@ class PGIAVI:
         #                                nhead=4,
         #                                num_layers=2,
         #                                dropout=0.2).to(self.device)
-        self.intention_net = StatesRNN(num_states=self.num_states,
+        self.intention_net = IntentionRNN(num_states=self.num_states,
                                        num_actions=self.num_actions,
                                        num_latents=self.num_latents,
                                        hidden_dim=128, 
                                        rnn_hidden_dim=128, 
                                        num_layers=1,
                                        dropout=0.3).to(self.device)
-        self.target_intention_net = StatesRNN(num_states=self.num_states,
+        self.target_intention_net = IntentionRNN(num_states=self.num_states,
                                        num_actions=self.num_actions,
                                        num_latents=self.num_latents,
                                        hidden_dim=128, 
