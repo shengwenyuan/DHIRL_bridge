@@ -25,6 +25,24 @@ if __name__ == '__main__':
     parser.add_argument('--data_dir', type=str, default='data', help='Path to data directory')
     parser.add_argument('--output_dir', type=str, default=None,
                         help='Output directory (default: outputs/bridge_train/ns_NS_na_NA)')
+    parser.add_argument('--group_id', type=str, default='default')
+
+    parser.add_argument('--model_type', type=str, default='IntentionRNN',
+                        choices=['IntentionRNN', 'IntentionLSTM', 'IntentionTransformer'])
+    parser.add_argument('--hidden_dim', type=int, default=128)
+    parser.add_argument('--rnn_hidden_dim', type=int, default=128)
+    parser.add_argument('--num_layers', type=int, default=1)
+    parser.add_argument('--dropout', type=float, default=0.3)
+    parser.add_argument('--nhead', type=int, default=4)
+    parser.add_argument('--lr', type=float, default=1e-3)
+
+    parser.add_argument('--reg_type', type=str, default='l1', choices=['l1', 'kl'])
+    parser.add_argument('--reg_weight', type=float, default=0.)
+
+    parser.add_argument('--num_epochs', type=int, default=1)
+    parser.add_argument('--loss_threshold', type=float, default=1e-2)
+    parser.add_argument('--max_iterations', type=int, default=150)
+
     args = parser.parse_args()
 
     num_folds = 5
@@ -43,12 +61,12 @@ if __name__ == '__main__':
         torch.cuda.manual_seed_all(args.rand_seed)
     print(f'{device}')
 
-    # Output dir reflects hyperparameters: ns_NS_na_NA
     if args.output_dir is not None:
         output_dir = args.output_dir
     else:
         output_dir = os.path.join('outputs', 'bridge_train', f'ns_{num_states}_na_{num_actions}')
-    os.makedirs(output_dir, exist_ok=True)
+    run_dir = os.path.join(output_dir, args.group_id)
+    os.makedirs(run_dir, exist_ok=True)
     output_df = pd.DataFrame(columns=['num_trajs', 'fold', 'train_ll', 'test_ll'])
 
     trans_path = os.path.join(args.data_dir, f'trans_probs_{num_states}_{num_actions}.npy')
@@ -69,20 +87,26 @@ if __name__ == '__main__':
             best_ll = None
             for repeats in range(num_repeats):
                 model = PGIAVI(num_latents=num_latents, num_states=num_states, num_actions=num_actions,
-                                train_trajs=train_trajs, test_trajs=test_trajs, P=P, discount=args.discount)
+                                train_trajs=train_trajs, test_trajs=test_trajs, P=P, discount=args.discount,
+                                model_type=args.model_type, hidden_dim=args.hidden_dim,
+                                rnn_hidden_dim=args.rnn_hidden_dim, num_layers=args.num_layers,
+                                dropout=args.dropout, nhead=args.nhead, lr=args.lr,
+                                reg_type=args.reg_type, reg_weight=args.reg_weight,
+                                num_epochs=args.num_epochs, loss_threshold=args.loss_threshold,
+                                max_iterations=args.max_iterations)
                 ll, f, mask, agents = model.fit()
                 if ll['test'] > best_test_ll:
                     best_test_ll = ll['test']
                     best_ll = ll
                     if num_trajs == len_trajs:
-                        param_dir = os.path.join(output_dir, f'pgiql/{num_trajs}/fold_{kf_idx}')
+                        param_dir = os.path.join(run_dir, f'{num_trajs}/fold_{kf_idx}')
                         os.makedirs(param_dir, exist_ok=True)
-                        np.save(os.path.join(param_dir, f'f_train.npy'), f['train'])
-                        np.save(os.path.join(param_dir, f'mask_train.npy'), mask['train'])
-                        np.save(os.path.join(param_dir, f'f_test.npy'), f['test'])
-                        np.save(os.path.join(param_dir, f'mask_test.npy'), mask['test'])
+                        np.save(os.path.join(param_dir, 'f_train.npy'), f['train'])
+                        np.save(os.path.join(param_dir, 'mask_train.npy'), mask['train'])
+                        np.save(os.path.join(param_dir, 'f_test.npy'), f['test'])
+                        np.save(os.path.join(param_dir, 'mask_test.npy'), mask['test'])
                         for agent_idx, agent in enumerate(agents):
                             np.save(os.path.join(param_dir, f'r_{agent_idx}.npy'), agent.r.cpu().numpy())
                             np.save(os.path.join(param_dir, f'q_{agent_idx}.npy'), agent.q.cpu().numpy())
             output_df.loc[len(output_df)] = [num_trajs, kf_idx, best_ll['train'], best_ll['test']]
-            output_df.to_csv(os.path.join(output_dir, args.ll_filename), index=False)
+            output_df.to_csv(os.path.join(run_dir, args.ll_filename), index=False)

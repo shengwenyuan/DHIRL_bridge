@@ -4,7 +4,7 @@ import torch
 import torch.nn.functional as F
 
 from scipy.special import logsumexp
-from model.intention import IntentionNet, StatesRNN, IntentionTransformer
+from model.intention import IntentionNet, IntentionRNN, IntentionLSTM, IntentionTransformer
 from torch.utils.data import DataLoader, TensorDataset
 
 
@@ -80,7 +80,11 @@ class IAVI_B:
 
 
 class PGIAVI:
-    def __init__(self, num_latents, num_states, num_actions, P, train_trajs, test_trajs, discount):
+    def __init__(self, num_latents, num_states, num_actions, P, train_trajs, test_trajs, discount,
+                 model_type='IntentionRNN', hidden_dim=128, rnn_hidden_dim=128,
+                 num_layers=1, dropout=0.3, nhead=4, lr=1e-3,
+                 reg_type='l1', reg_weight=0., num_epochs=1,
+                 loss_threshold=1e-2, max_iterations=150):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.num_latents = num_latents  # K
         self.num_states = num_states
@@ -90,37 +94,29 @@ class PGIAVI:
         self.train_trajs = train_trajs
         self.test_trajs = test_trajs
 
-        # self.intention_net = IntentionTransformer(num_states=self.num_states, 
-        #                                num_actions=self.num_actions,
-        #                                num_latents=self.num_latents, 
-        #                                d_model=128, 
-        #                                nhead=4,
-        #                                num_layers=2,
-        #                                dropout=0.2).to(self.device)
-        # self.target_intention_net = IntentionTransformer(num_states=self.num_states, 
-        #                                num_actions=self.num_actions,
-        #                                num_latents=self.num_latents, 
-        #                                d_model=128, 
-        #                                nhead=4,
-        #                                num_layers=2,
-        #                                dropout=0.2).to(self.device)
-        self.intention_net = StatesRNN(num_states=self.num_states,
-                                       num_actions=self.num_actions,
-                                       num_latents=self.num_latents,
-                                       hidden_dim=128, 
-                                       rnn_hidden_dim=128, 
-                                       num_layers=1,
-                                       dropout=0.3).to(self.device)
-        self.target_intention_net = StatesRNN(num_states=self.num_states,
-                                       num_actions=self.num_actions,
-                                       num_latents=self.num_latents,
-                                       hidden_dim=128, 
-                                       rnn_hidden_dim=128, 
-                                       num_layers=1,
-                                       dropout=0.3).to(self.device)
+        self.reg_type = reg_type
+        self.reg_weight = reg_weight
+        self.num_epochs = num_epochs
+        self.loss_threshold = loss_threshold
+        self.max_iterations = max_iterations
+
+        model_kwargs = dict(num_states=num_states, num_actions=num_actions,
+                            num_latents=num_latents, num_layers=num_layers, dropout=dropout)
+        if model_type == 'IntentionTransformer':
+            model_kwargs.update(d_model=hidden_dim, nhead=nhead)
+            model_cls = IntentionTransformer
+        elif model_type == 'IntentionLSTM':
+            model_kwargs.update(hidden_dim=hidden_dim, rnn_hidden_dim=rnn_hidden_dim)
+            model_cls = IntentionLSTM
+        else:
+            model_kwargs.update(hidden_dim=hidden_dim, rnn_hidden_dim=rnn_hidden_dim)
+            model_cls = IntentionRNN
+
+        self.intention_net = model_cls(**model_kwargs).to(self.device)
+        self.target_intention_net = model_cls(**model_kwargs).to(self.device)
         self.target_intention_net.load_state_dict(self.intention_net.state_dict())
         self.target_intention_net.eval()
-        self.optimizer = torch.optim.Adam(self.intention_net.parameters(), lr=1e-3)
+        self.optimizer = torch.optim.Adam(self.intention_net.parameters(), lr=lr)
 
     def intention_batch_mapping(self, e_loader, total_length):
         log_p_gammas = []
@@ -202,26 +198,43 @@ class PGIAVI:
 
         return batch_states, batch_actions, mask
     
-    def train_minibatch(self, m_loader, total_length, num_epochs=1):
-        """
-        :param agents: List of IAVI agents
-        :param num_epochs: Number of passes through the data
-        """
+    def train_minibatch(self, m_loader, total_length, num_epochs=1, reg_weight=0., reg_type='l1'):
         loss_list = []
         for epoch in range(num_epochs):
             total_loss = 0
             for batch_states, batch_actions, batch_target_gamma, batch_mask in m_loader:
+                batch_states = batch_states.to(self.device)
+                batch_actions = batch_actions.to(self.device)
+                batch_target_gamma = batch_target_gamma.to(self.device)
+                batch_mask = batch_mask.to(self.device)
+
                 self.optimizer.zero_grad()
 
-                pred_logits = self.intention_net(batch_states.to(self.device),
-                                                 batch_actions.to(self.device),
-                                                 mask=batch_mask.to(self.device),
+                pred_logits = self.intention_net(batch_states, batch_actions,
+                                                 mask=batch_mask,
                                                  total_length=total_length)  # (B, T, K)
                 pred_logf = torch.log_softmax(pred_logits, dim=-1)  # (B, T, K)
-                
-                # Compute loss: negative log-likelihood
-                loss = -(batch_target_gamma.to(self.device) * pred_logf * batch_mask.to(self.device).unsqueeze(-1)).sum(dim=-1).mean()
 
+                nll_loss = -(batch_target_gamma * pred_logf * batch_mask.unsqueeze(-1)).sum(dim=-1).mean()
+
+                if reg_weight > 0.:
+                    mask_curr = batch_mask[:, 1:]
+                    gamma_curr = batch_target_gamma[:, 1:, :]
+
+                    f_curr = pred_logits[:, 1:, :].softmax(dim=-1)
+                    f_prev = pred_logits[:, :-1, :].softmax(dim=-1)
+
+                    l1 = gamma_curr * torch.abs(f_curr - f_prev)
+                    l1 = (l1.sum(dim=-1) * mask_curr).mean()
+                    kl = f_prev * (torch.log(f_prev + 1e-8) - torch.log(f_curr + 1e-8))
+                    kl = (kl.sum(dim=-1) * mask_curr).mean()
+
+                    reg = l1 if reg_type == 'l1' else kl
+                    kl_reg = reg_weight * reg
+                else:
+                    kl_reg = 0.
+
+                loss = nll_loss + kl_reg
                 loss.backward()
                 self.optimizer.step()
                 total_loss += loss.item()
@@ -301,8 +314,8 @@ class PGIAVI:
 
             # * * * Update intention network * * *
             intention_start_time = time.time()
-            # total_loss = self.train_batched(batch_states, batch_actions, batch_target_gamma, num_epochs=1)
-            total_loss = self.train_minibatch(m_loader, max_len, num_epochs=1)
+            total_loss = self.train_minibatch(m_loader, max_len, num_epochs=self.num_epochs,
+                                              reg_weight=self.reg_weight, reg_type=self.reg_type)
             intention_time = time.time() - intention_start_time
             logstep_intention_time += intention_time
 
@@ -317,7 +330,7 @@ class PGIAVI:
                 logstep_q_time = 0
                 logstep_intention_time = 0
 
-            if (abs(total_loss) < 1e-2) or (logger_cnt >= 150):
+            if (abs(total_loss) < self.loss_threshold) or (logger_cnt >= self.max_iterations):
                 final_iteration_time = time.time() - iteration_start_time
                 print(f'Iteration {logger_cnt}, Converged with Loss: {total_loss:.4f}, Total time: {final_iteration_time:.2f}s')
                 break
