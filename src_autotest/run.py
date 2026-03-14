@@ -114,6 +114,9 @@ def main():
             params = {**defaults, **exp}
             params['group_id'] = f'{gid}/{eid}'
 
+            if 'output_dir' in params:
+                params['output_dir'] = os.path.join(params['output_dir'], timestamp)
+
             label = label_from_overrides(exp, defaults)
             cmd = build_command(params)
             log_path = os.path.join(group_log_dir, f'{eid}.log')
