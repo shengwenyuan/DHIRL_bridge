@@ -15,13 +15,13 @@ if __name__ == '__main__':
     parser.add_argument('--ll_filename', type=str, default='ll_pgiql.csv')
     parser.add_argument('--discount', type=float, default=0.97)
     parser.add_argument('--num_repeats', type=int, default=1)
-    parser.add_argument('--num_latents', type=int, default=5)
+    parser.add_argument('--num_latents', type=int, default=3)
     parser.add_argument('--rand_seed', type=int, default=42)
     args = parser.parse_args()
 
     num_folds = 5
     num_repeats = args.num_repeats
-    num_states = 448
+    num_states = 1024
     num_actions = 32
     num_latents = args.num_latents
 

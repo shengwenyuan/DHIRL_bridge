@@ -29,7 +29,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--model_type', type=str, default='IntentionRNN',
                         choices=['IntentionRNN', 'IntentionLSTM', 'IntentionTransformer'])
-    parser.add_argument('--hidden_dim', type=int, default=128)
+    parser.add_argument('--embed_dim', type=int, default=128)
     parser.add_argument('--rnn_hidden_dim', type=int, default=128)
     parser.add_argument('--num_layers', type=int, default=1)
     parser.add_argument('--dropout', type=float, default=0.3)
@@ -88,7 +88,7 @@ if __name__ == '__main__':
             for repeats in range(num_repeats):
                 model = PGIAVI(num_latents=num_latents, num_states=num_states, num_actions=num_actions,
                                 train_trajs=train_trajs, test_trajs=test_trajs, P=P, discount=args.discount,
-                                model_type=args.model_type, hidden_dim=args.hidden_dim,
+                                model_type=args.model_type, embed_dim=args.embed_dim,
                                 rnn_hidden_dim=args.rnn_hidden_dim, num_layers=args.num_layers,
                                 dropout=args.dropout, nhead=args.nhead, lr=args.lr,
                                 reg_type=args.reg_type, reg_weight=args.reg_weight,

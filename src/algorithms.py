@@ -93,28 +93,28 @@ class PGIAVI:
         # self.intention_net = IntentionTransformer(num_states=self.num_states, 
         #                                num_actions=self.num_actions,
         #                                num_latents=self.num_latents, 
-        #                                d_model=128, 
+        #                                embed_dim=128, 
         #                                nhead=4,
         #                                num_layers=2,
         #                                dropout=0.2).to(self.device)
         # self.target_intention_net = IntentionTransformer(num_states=self.num_states, 
         #                                num_actions=self.num_actions,
         #                                num_latents=self.num_latents, 
-        #                                d_model=128, 
+        #                                embed_dim=128, 
         #                                nhead=4,
         #                                num_layers=2,
         #                                dropout=0.2).to(self.device)
         self.intention_net = IntentionRNN(num_states=self.num_states,
                                        num_actions=self.num_actions,
                                        num_latents=self.num_latents,
-                                       hidden_dim=128, 
+                                       embed_dim=128, 
                                        rnn_hidden_dim=128, 
                                        num_layers=1,
                                        dropout=0.3).to(self.device)
         self.target_intention_net = IntentionRNN(num_states=self.num_states,
                                        num_actions=self.num_actions,
                                        num_latents=self.num_latents,
-                                       hidden_dim=128, 
+                                       embed_dim=128, 
                                        rnn_hidden_dim=128, 
                                        num_layers=1,
                                        dropout=0.3).to(self.device)
@@ -308,7 +308,7 @@ class PGIAVI:
 
             self.target_intention_net.load_state_dict(self.intention_net.state_dict())
 
-            if logger_cnt % 2 == 0:
+            if logger_cnt % 1 == 0:
                 iteration_time = time.time() - iteration_start_time
                 print(f'Iteration {logger_cnt}, Loss: {total_loss:.4f}, \n\
                        \tExpectation: {logstep_exp_time:.2f}s, Q-update: {logstep_q_time:.2f}s, Intention: {logstep_intention_time:.2f}s, \n\
@@ -317,7 +317,7 @@ class PGIAVI:
                 logstep_q_time = 0
                 logstep_intention_time = 0
 
-            if (abs(total_loss) < 1e-2) or (logger_cnt >= 80):
+            if (abs(total_loss) < 1e-3) or (logger_cnt >= 80):
                 final_iteration_time = time.time() - iteration_start_time
                 print(f'Iteration {logger_cnt}, Converged with Loss: {total_loss:.4f}, Total time: {final_iteration_time:.2f}s')
                 break

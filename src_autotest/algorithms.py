@@ -81,7 +81,7 @@ class IAVI_B:
 
 class PGIAVI:
     def __init__(self, num_latents, num_states, num_actions, P, train_trajs, test_trajs, discount,
-                 model_type='IntentionRNN', hidden_dim=128, rnn_hidden_dim=128,
+                 model_type='IntentionRNN', embed_dim=128, rnn_hidden_dim=128,
                  num_layers=1, dropout=0.3, nhead=4, lr=1e-3,
                  reg_type='l1', reg_weight=0., num_epochs=1,
                  loss_threshold=1e-2, max_iterations=150):
@@ -101,15 +101,16 @@ class PGIAVI:
         self.max_iterations = max_iterations
 
         model_kwargs = dict(num_states=num_states, num_actions=num_actions,
-                            num_latents=num_latents, num_layers=num_layers, dropout=dropout)
+                            num_latents=num_latents, embed_dim=embed_dim,
+                            num_layers=num_layers, dropout=dropout)
         if model_type == 'IntentionTransformer':
-            model_kwargs.update(d_model=hidden_dim, nhead=nhead)
+            model_kwargs.update(nhead=nhead)
             model_cls = IntentionTransformer
         elif model_type == 'IntentionLSTM':
-            model_kwargs.update(hidden_dim=hidden_dim, rnn_hidden_dim=rnn_hidden_dim)
+            model_kwargs.update(rnn_hidden_dim=rnn_hidden_dim)
             model_cls = IntentionLSTM
         else:
-            model_kwargs.update(hidden_dim=hidden_dim, rnn_hidden_dim=rnn_hidden_dim)
+            model_kwargs.update(rnn_hidden_dim=rnn_hidden_dim)
             model_cls = IntentionRNN
 
         self.intention_net = model_cls(**model_kwargs).to(self.device)

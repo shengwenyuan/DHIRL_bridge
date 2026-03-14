@@ -20,8 +20,8 @@ defaults:
   rand_seed: 42
 
   model_type: IntentionRNN
-  hidden_dim: 128
-  rnn_hidden_dim: 128
+  embed_dim: 128
+  rnn_embed_dim: 128
   num_layers: 1
   dropout: 0.2
   nhead: 4
@@ -42,30 +42,30 @@ groups:
     description: "Scale input projection and RNN width together"
     experiments:
       - id: E01
-        hidden_dim: 256
-        rnn_hidden_dim: 256
+        embed_dim: 256
+        rnn_embed_dim: 256
       - id: E02
-        hidden_dim: 384
-        rnn_hidden_dim: 384
+        embed_dim: 384
+        rnn_embed_dim: 384
       - id: E03
-        hidden_dim: 512
-        rnn_hidden_dim: 512
+        embed_dim: 512
+        rnn_embed_dim: 512
 
   rnn_depth:
     id: G02
     description: "Test RNN depth for temporal modeling capacity"
     experiments:
       - id: E01
-        hidden_dim: 256
-        rnn_hidden_dim: 256
+        embed_dim: 256
+        rnn_embed_dim: 256
         num_layers: 1
       - id: E02
-        hidden_dim: 256
-        rnn_hidden_dim: 256
+        embed_dim: 256
+        rnn_embed_dim: 256
         num_layers: 2
       - id: E03 
-        hidden_dim: 256
-        rnn_hidden_dim: 256
+        embed_dim: 256
+        rnn_embed_dim: 256
         num_layers: 3
 
   state_scaling_final:
@@ -73,51 +73,51 @@ groups:
     description: "Validate best config across all state spaces"
     experiments:
       - id: E01
-        hidden_dim: 256
-        rnn_hidden_dim: 256
+        embed_dim: 256
+        rnn_embed_dim: 256
         num_layers: 2
         dropout: 0.1
       - id: E02
-        hidden_dim: 256
-        rnn_hidden_dim: 256
+        embed_dim: 256
+        rnn_embed_dim: 256
         num_layers: 2
         dropout: 0.2
       - id: E03 
-        hidden_dim: 256
-        rnn_hidden_dim: 256
+        embed_dim: 256
+        rnn_embed_dim: 256
         num_layers: 2
         dropout: 0.3
       - id: E04
-        hidden_dim: 256
-        rnn_hidden_dim: 256
+        embed_dim: 256
+        rnn_embed_dim: 256
         num_layers: 2
         dropout: 0.4
 
 # ── G04: Disentangle projection vs RNN width ──────────────
   # GOAL: Isolate whether the bottleneck is in projection
   #   or in RNN hidden state. Vary one while fixing the other.
-  # EXPECTED: If large hidden_dim + small rnn helps → projection
-  #   was the problem. If small hidden_dim + large rnn helps →
+  # EXPECTED: If large embed_dim + small rnn helps → projection
+  #   was the problem. If small embed_dim + large rnn helps →
   #   RNN capacity was the problem. Likely both matter.
   disentangle:
     id: G04
     description: "Separate projection width from RNN width"
     experiments:
       - id: E01
-        hidden_dim: 384
-        rnn_hidden_dim: 128
+        embed_dim: 384
+        rnn_embed_dim: 128
         num_layers: 1
       - id: E02
-        hidden_dim: 128
-        rnn_hidden_dim: 384
+        embed_dim: 128
+        rnn_embed_dim: 384
         num_layers: 1
       - id: E03
-        hidden_dim: 384
-        rnn_hidden_dim: 128
+        embed_dim: 384
+        rnn_embed_dim: 128
         num_layers: 2
       - id: E04
-        hidden_dim: 128
-        rnn_hidden_dim: 384
+        embed_dim: 128
+        rnn_embed_dim: 384
         num_layers: 2
 
   

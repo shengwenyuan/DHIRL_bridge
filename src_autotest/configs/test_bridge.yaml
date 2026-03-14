@@ -21,7 +21,7 @@ defaults:
   rand_seed: 42
 
   model_type: IntentionRNN
-  hidden_dim: 128
+  embed_dim: 128
   rnn_hidden_dim: 128
   num_layers: 1
   dropout: 0.3

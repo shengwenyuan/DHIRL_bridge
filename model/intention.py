@@ -19,16 +19,16 @@ class IntentionNet(nn.Module):
 
 
 class IntentionRNN(nn.Module):
-    def __init__(self, num_states, num_actions, num_latents, hidden_dim=128, rnn_hidden_dim=128, num_layers=1, dropout=0.1):
+    def __init__(self, num_states, num_actions, num_latents, embed_dim=128, rnn_hidden_dim=128, num_layers=1, dropout=0.1):
         super(IntentionRNN, self).__init__()
         self.rnn_hidden_dim = rnn_hidden_dim
         self.num_layers = num_layers
 
-        self.state_embed = nn.Embedding(num_states, hidden_dim)
-        self.action_embed = nn.Embedding(num_actions, hidden_dim)
+        self.state_embed = nn.Embedding(num_states, embed_dim)
+        self.action_embed = nn.Embedding(num_actions, embed_dim)
         
         self.rnn = nn.RNN(
-            input_size=hidden_dim,
+            input_size=2 * embed_dim,
             hidden_size=rnn_hidden_dim,
             num_layers=num_layers,
             batch_first=True,
@@ -38,9 +38,9 @@ class IntentionRNN(nn.Module):
         self.output_proj = nn.Linear(rnn_hidden_dim, num_latents)
 
     def forward(self, bs, ba, mask=None, total_length=None):
-        state_embeds = self.state_embed(bs)   # (B, T, hidden_dim)
-        action_embeds = self.action_embed(ba) # (B, T, hidden_dim)
-        x = state_embeds + action_embeds       # (B, T, hidden_dim)
+        state_embeds = self.state_embed(bs)   # (B, T, embed_dim)
+        action_embeds = self.action_embed(ba) # (B, T, embed_dim)
+        x = torch.cat([state_embeds, action_embeds], dim=-1)  # (B, T, 2*embed_dim)
         if mask is not None:
             lengths = mask.sum(dim=1)
             x_packed = pack_padded_sequence(x, lengths.cpu(), batch_first=True, enforce_sorted=False)
@@ -54,16 +54,16 @@ class IntentionRNN(nn.Module):
 
 
 class IntentionLSTM(nn.Module):
-    def __init__(self, num_states, num_actions, num_latents, hidden_dim=128, rnn_hidden_dim=128, num_layers=1, dropout=0.1):
+    def __init__(self, num_states, num_actions, num_latents, embed_dim=128, rnn_hidden_dim=128, num_layers=1, dropout=0.1):
         super(IntentionLSTM, self).__init__()
         self.rnn_hidden_dim = rnn_hidden_dim
         self.num_layers = num_layers
 
-        self.state_embed = nn.Embedding(num_states, hidden_dim)
-        self.action_embed = nn.Embedding(num_actions, hidden_dim)
+        self.state_embed = nn.Embedding(num_states, embed_dim)
+        self.action_embed = nn.Embedding(num_actions, embed_dim)
 
         self.rnn = nn.LSTM(
-            input_size=hidden_dim,
+            input_size=2 * embed_dim,
             hidden_size=rnn_hidden_dim,
             num_layers=num_layers,
             batch_first=True,
@@ -73,9 +73,9 @@ class IntentionLSTM(nn.Module):
         self.output_proj = nn.Linear(rnn_hidden_dim, num_latents)
 
     def forward(self, bs, ba, mask=None, total_length=None):
-        state_embeds = self.state_embed(bs)   # (B, T, hidden_dim)
-        action_embeds = self.action_embed(ba) # (B, T, hidden_dim)
-        x = state_embeds + action_embeds       # (B, T, hidden_dim)
+        state_embeds = self.state_embed(bs)   # (B, T, embed_dim)
+        action_embeds = self.action_embed(ba) # (B, T, embed_dim)
+        x = torch.cat([state_embeds, action_embeds], dim=-1)  # (B, T, 2*embed_dim)
         if mask is not None:
             lengths = mask.sum(dim=1)
             x_packed = pack_padded_sequence(x, lengths.cpu(), batch_first=True, enforce_sorted=False)
@@ -93,13 +93,14 @@ class IntentionTransformer(nn.Module):
                  num_states,
                  num_actions,
                  num_latents,
-                 d_model=128,
+                 embed_dim=128,
                  nhead=4,
                  num_layers=2,
                  dropout=0.1):
         super().__init__()
-        self.state_embed = nn.Embedding(num_states, d_model)
-        self.action_embed = nn.Embedding(num_actions, d_model)
+        d_model = 2 * embed_dim
+        self.state_embed = nn.Embedding(num_states, embed_dim)
+        self.action_embed = nn.Embedding(num_actions, embed_dim)
         self.pos_encoding = PositionalEncoding(d_model, dropout)
         encoder_layer = nn.TransformerEncoderLayer(d_model=d_model, nhead=nhead, dropout=dropout, batch_first=True)
         self.transformer = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
@@ -107,9 +108,9 @@ class IntentionTransformer(nn.Module):
 
     def forward(self, bs, ba, mask=None, total_length=None):
         # bs: (B, T), ba: (B, T)
-        state_embeds = self.state_embed(bs)   # (B, T, d_model)
-        action_embeds = self.action_embed(ba) # (B, T, d_model)
-        x = state_embeds + action_embeds       # (B, T, d_model)
+        state_embeds = self.state_embed(bs)   # (B, T, embed_dim)
+        action_embeds = self.action_embed(ba) # (B, T, embed_dim)
+        x = torch.cat([state_embeds, action_embeds], dim=-1)  # (B, T, 2*embed_dim)
         x = self.pos_encoding(x)          # add positional encoding
         if mask is not None:
             padding_mask = ~mask

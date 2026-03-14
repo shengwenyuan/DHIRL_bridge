@@ -21,7 +21,7 @@ PARAM_KEYS = [
     'num_states', 'num_actions', 'data_dir',
     'll_filename', 'output_dir', 'group_id',
     'discount', 'num_repeats', 'num_latents', 'rand_seed',
-    'model_type', 'hidden_dim', 'rnn_hidden_dim', 'num_layers', 'dropout', 'nhead', 'lr',
+    'model_type', 'embed_dim', 'rnn_hidden_dim', 'num_layers', 'dropout', 'nhead', 'lr',
     'reg_type', 'reg_weight',
     'num_epochs', 'loss_threshold', 'max_iterations',
 ]
