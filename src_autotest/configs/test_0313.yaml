@@ -1,12 +1,10 @@
 # ──────────────────────────────────────────────────────────────
-# Autotest config for src_autotest/train_bridge.py
-#
 # Usage (from DHIRL_bridge root):
 #   python -m src_autotest.run src_autotest/configs/test_bridge.yaml --groups projection_width
-#
-# NOTE: trajs_NS_NA.json and trans_probs_NS_NA.npy must exist in data_dir
 # ──────────────────────────────────────────────────────────────
 
+
+# We dig the potential of pgiavi, by testing hidden dims, RNN depth
 defaults:
   num_states: 2048
   num_actions: 32
@@ -42,14 +40,14 @@ groups:
     description: "Scale input projection and RNN width together"
     experiments:
       - id: E01
+        hidden_dim: 128
+        rnn_hidden_dim: 128
+      - id: E02
         hidden_dim: 256
         rnn_hidden_dim: 256
-      - id: E02
+      - id: E03
         hidden_dim: 384
         rnn_hidden_dim: 384
-      - id: E03
-        hidden_dim: 512
-        rnn_hidden_dim: 512
 
   rnn_depth:
     id: G02
@@ -68,56 +66,48 @@ groups:
         rnn_hidden_dim: 256
         num_layers: 3
 
-  state_scaling_final:
-    id: G03
-    description: "Validate best config across all state spaces"
-    experiments:
-      - id: E01
-        hidden_dim: 256
-        rnn_hidden_dim: 256
-        num_layers: 2
-        dropout: 0.1
-      - id: E02
-        hidden_dim: 256
-        rnn_hidden_dim: 256
-        num_layers: 2
-        dropout: 0.2
-      - id: E03 
-        hidden_dim: 256
-        rnn_hidden_dim: 256
-        num_layers: 2
-        dropout: 0.3
-      - id: E04
-        hidden_dim: 256
-        rnn_hidden_dim: 256
-        num_layers: 2
-        dropout: 0.4
+  # disentangle:
+  #   id: G03
+  #   description: "Separate projection width from RNN width"
+  #   experiments:
+  #     - id: E01
+  #       hidden_dim: 384
+  #       rnn_hidden_dim: 128
+  #       num_layers: 1
+  #     - id: E02
+  #       hidden_dim: 128
+  #       rnn_hidden_dim: 384
+  #       num_layers: 1
+  #     - id: E03
+  #       hidden_dim: 384
+  #       rnn_hidden_dim: 128
+  #       num_layers: 2
+  #     - id: E04
+  #       hidden_dim: 128
+  #       rnn_hidden_dim: 384
+  #       num_layers: 2
 
-# ── G04: Disentangle projection vs RNN width ──────────────
-  # GOAL: Isolate whether the bottleneck is in projection
-  #   or in RNN hidden state. Vary one while fixing the other.
-  # EXPECTED: If large hidden_dim + small rnn helps → projection
-  #   was the problem. If small hidden_dim + large rnn helps →
-  #   RNN capacity was the problem. Likely both matter.
-  disentangle:
-    id: G04
-    description: "Separate projection width from RNN width"
-    experiments:
-      - id: E01
-        hidden_dim: 384
-        rnn_hidden_dim: 128
-        num_layers: 1
-      - id: E02
-        hidden_dim: 128
-        rnn_hidden_dim: 384
-        num_layers: 1
-      - id: E03
-        hidden_dim: 384
-        rnn_hidden_dim: 128
-        num_layers: 2
-      - id: E04
-        hidden_dim: 128
-        rnn_hidden_dim: 384
-        num_layers: 2
-
-  
+  # state_scaling_final:
+  #   id: G04
+  #   description: "Validate best config across all state spaces"
+  #   experiments:
+  #     - id: E01
+  #       hidden_dim: 256
+  #       rnn_hidden_dim: 256
+  #       num_layers: 2
+  #       dropout: 0.1
+  #     - id: E02
+  #       hidden_dim: 256
+  #       rnn_hidden_dim: 256
+  #       num_layers: 2
+  #       dropout: 0.2
+  #     - id: E03 
+  #       hidden_dim: 256
+  #       rnn_hidden_dim: 256
+  #       num_layers: 2
+  #       dropout: 0.3
+  #     - id: E04
+  #       hidden_dim: 256
+  #       rnn_hidden_dim: 256
+  #       num_layers: 2
+  #       dropout: 0.4

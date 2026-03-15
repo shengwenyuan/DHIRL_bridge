@@ -1,0 +1,120 @@
+# ──────────────────────────────────────────────────────────────
+# Usage (from DHIRL_bridge root):
+#   python -m src_autotest.run src_autotest/configs/test_bridge.yaml --groups projection_width
+# ──────────────────────────────────────────────────────────────
+
+# We test dinov2, watch curve of states increase, test 64 actions
+defaults:
+  num_states: 1024
+  num_actions: 32
+  data_dir: data_autotest/trajs
+
+  ll_filename: ll.csv
+  output_dir: src_autotest/outputs
+  discount: 0.97
+  num_repeats: 1
+  num_latents: 3
+  rand_seed: 42
+
+  model_type: IntentionRNN
+  hidden_dim: 128
+  rnn_hidden_dim: 128
+  num_layers: 1
+  dropout: 0.2
+  nhead: 4
+  lr: 0.001
+
+  reg_type: l1
+  reg_weight: 0.0
+
+  num_epochs: 1
+  loss_threshold: 1e-3
+  max_iterations: 150
+
+
+groups:
+
+  dinov2-512states-autotest:
+    id: G01
+    description: "All NS x NA data cases from data_autotest/dinov2_*"
+    experiments:
+      - id: E01
+        data_dir: data_autotest/dinov2_small
+        num_states: 512
+        num_actions: 32
+      - id: E02
+        data_dir: data_autotest/dinov2_base
+        num_states: 512
+        num_actions: 32
+      - id: E03
+        data_dir: data_autotest/dinov2_large
+        num_states: 512
+        num_actions: 32
+      - id: E04
+        data_dir: data_autotest/dinov2_giant
+        num_states: 512
+        num_actions: 32
+
+  # Traverse all (num_states, num_actions) data cases in data_autotest/.
+  bridgeV2-contrastive-autotest:
+    id: G02
+    description: "All NS x NA data cases from data_autotest/trajs"
+    experiments:
+      - id: E01
+        data_dir: data_autotest/trajs
+        num_states: 384
+        num_actions: 32
+      - id: E02
+        data_dir: data_autotest/trajs
+        num_states: 512
+        num_actions: 32
+      - id: E03
+        data_dir: data_autotest/trajs
+        num_states: 1024
+        num_actions: 32
+
+  64actions-autotest:
+    id: G03
+    description: "All NS x NA=64 data cases from data_autotest/trajs"
+    experiments:
+      - id: E01
+        data_dir: data_autotest/trajs
+        num_states: 512
+        num_actions: 64
+      - id: E02
+        data_dir: data_autotest/dinov2_small
+        num_states: 512
+        num_actions: 64
+      - id: E03
+        data_dir: data_autotest/dinov2_base
+        num_states: 512
+        num_actions: 64
+      - id: E04
+        data_dir: data_autotest/dinov2_large
+        num_states: 512
+        num_actions: 64
+      - id: E05
+        data_dir: data_autotest/dinov2_giant
+        num_states: 512
+        num_actions: 64
+
+  dinov2-1024states-autotest:
+    id: G04
+    description: "All NS x NA data cases from data_autotest/dinov2_*"
+    experiments:
+      - id: E01
+        data_dir: data_autotest/dinov2_small
+        num_states: 1024
+        num_actions: 32
+      - id: E02
+        data_dir: data_autotest/dinov2_base
+        num_states: 1024
+        num_actions: 32
+      - id: E03
+        data_dir: data_autotest/dinov2_large
+        num_states: 1024
+        num_actions: 32
+      - id: E04
+        data_dir: data_autotest/dinov2_giant
+        num_states: 1024
+        num_actions: 32

@@ -40,7 +40,6 @@ defaults:
 groups:
 
   # Traverse all (num_states, num_actions) data cases in data_autotest/.
-  # Mirrors run_all_pgirl_autotest.py discover_cases() order.
   bridgeV2-contrastive-autotest:
     id: G01
     description: "All NS x NA data cases from data_autotest/trajs"
