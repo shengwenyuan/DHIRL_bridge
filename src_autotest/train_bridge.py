@@ -43,6 +43,9 @@ if __name__ == '__main__':
     parser.add_argument('--loss_threshold', type=float, default=1e-2)
     parser.add_argument('--max_iterations', type=int, default=150)
 
+    parser.add_argument('--save_npy', type=int, default=1,
+                        help='Save per-fold npy files (f, mask, r, q). 1=on, 0=off')
+
     args = parser.parse_args()
 
     num_folds = 5
@@ -98,7 +101,7 @@ if __name__ == '__main__':
                 if ll['test'] > best_test_ll:
                     best_test_ll = ll['test']
                     best_ll = ll
-                    if num_trajs == len_trajs:
+                    if num_trajs == len_trajs and args.save_npy:
                         param_dir = os.path.join(run_dir, f'{num_trajs}/fold_{kf_idx}')
                         os.makedirs(param_dir, exist_ok=True)
                         np.save(os.path.join(param_dir, 'f_train.npy'), f['train'])

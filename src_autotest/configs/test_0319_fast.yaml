@@ -1,0 +1,1495 @@
+# ──────────────────────────────────────────────────────────────
+# Usage (from DHIRL_bridge root):
+#   python -m src_autotest.run src_autotest/configs/test_0319_fast.yaml --groups XXX
+# ──────────────────────────────────────────────────────────────
+
+# We train on branch v5060, where IAVI is greatly fastened by torch.linalg.pinv
+defaults:
+  num_states: 512
+  num_actions: 32
+  data_dir: data_autotest/trajs
+
+  ll_filename: ll.csv
+  output_dir: src_autotest/outputs
+  discount: 0.97
+  num_repeats: 1
+  num_latents: 3
+  rand_seed: 42
+
+  model_type: IntentionRNN
+  hidden_dim: 128
+  rnn_hidden_dim: 128
+  num_layers: 1
+  dropout: 0.2
+  nhead: 4
+  lr: 0.001
+
+  reg_type: l1
+  reg_weight: 0.0
+
+  num_epochs: 1
+  loss_threshold: 1e-3
+  max_iterations: 150
+  save_npy: 0
+
+groups:
+  States512-Actions32:
+    id: G01
+    description: "Pre-training model types [1+3]; Intention model types [3]; Latent intention numbers [6]"
+    experiments:
+      - id: E01
+        num_states: 512
+        data_dir: data_autotest/trajs
+        num_latents: 1
+        model_type: IntentionRNN
+      - id: E02
+        num_states: 512
+        data_dir: data_autotest/trajs
+        num_latents: 2
+        model_type: IntentionRNN
+      - id: E03
+        num_states: 512
+        data_dir: data_autotest/trajs
+        num_latents: 3
+        model_type: IntentionRNN
+      - id: E04
+        num_states: 512
+        data_dir: data_autotest/trajs
+        num_latents: 4
+        model_type: IntentionRNN
+      - id: E05
+        num_states: 512
+        data_dir: data_autotest/trajs
+        num_latents: 5
+        model_type: IntentionRNN
+      - id: E06
+        num_states: 512
+        data_dir: data_autotest/trajs
+        num_latents: 6
+        model_type: IntentionRNN
+      - id: E07
+        num_states: 512
+        data_dir: data_autotest/trajs
+        num_latents: 1
+        model_type: IntentionLSTM
+      - id: E08
+        num_states: 512
+        data_dir: data_autotest/trajs
+        num_latents: 2
+        model_type: IntentionLSTM
+      - id: E09
+        num_states: 512
+        data_dir: data_autotest/trajs
+        num_latents: 3
+        model_type: IntentionLSTM
+      - id: E10
+        num_states: 512
+        data_dir: data_autotest/trajs
+        num_latents: 4
+        model_type: IntentionLSTM
+      - id: E11
+        num_states: 512
+        data_dir: data_autotest/trajs
+        num_latents: 5
+        model_type: IntentionLSTM
+      - id: E12
+        num_states: 512
+        data_dir: data_autotest/trajs
+        num_latents: 6
+        model_type: IntentionLSTM
+      - id: E13
+        num_states: 512
+        data_dir: data_autotest/trajs
+        num_latents: 1
+        model_type: IntentionTransformer
+      - id: E14
+        num_states: 512
+        data_dir: data_autotest/trajs
+        num_latents: 2
+        model_type: IntentionTransformer
+      - id: E15
+        num_states: 512
+        data_dir: data_autotest/trajs
+        num_latents: 3
+        model_type: IntentionTransformer
+      - id: E16
+        num_states: 512
+        data_dir: data_autotest/trajs
+        num_latents: 4
+        model_type: IntentionTransformer
+      - id: E17
+        num_states: 512
+        data_dir: data_autotest/trajs
+        num_latents: 5
+        model_type: IntentionTransformer
+      - id: E18
+        num_states: 512
+        data_dir: data_autotest/trajs
+        num_latents: 6
+        model_type: IntentionTransformer
+      - id: E19
+        num_states: 512
+        data_dir: data_autotest/dinov2_small
+        num_latents: 1
+        model_type: IntentionRNN
+      - id: E20
+        num_states: 512
+        data_dir: data_autotest/dinov2_small
+        num_latents: 2
+        model_type: IntentionRNN
+      - id: E21
+        num_states: 512
+        data_dir: data_autotest/dinov2_small
+        num_latents: 3
+        model_type: IntentionRNN
+      - id: E22
+        num_states: 512
+        data_dir: data_autotest/dinov2_small
+        num_latents: 4
+        model_type: IntentionRNN
+      - id: E23
+        num_states: 512
+        data_dir: data_autotest/dinov2_small
+        num_latents: 5
+        model_type: IntentionRNN
+      - id: E24
+        num_states: 512
+        data_dir: data_autotest/dinov2_small
+        num_latents: 6
+        model_type: IntentionRNN
+      - id: E25
+        num_states: 512
+        data_dir: data_autotest/dinov2_small
+        num_latents: 1
+        model_type: IntentionLSTM
+      - id: E26
+        num_states: 512
+        data_dir: data_autotest/dinov2_small
+        num_latents: 2
+        model_type: IntentionLSTM
+      - id: E27
+        num_states: 512
+        data_dir: data_autotest/dinov2_small
+        num_latents: 3
+        model_type: IntentionLSTM
+      - id: E28
+        num_states: 512
+        data_dir: data_autotest/dinov2_small
+        num_latents: 4
+        model_type: IntentionLSTM
+      - id: E29
+        num_states: 512
+        data_dir: data_autotest/dinov2_small
+        num_latents: 5
+        model_type: IntentionLSTM
+      - id: E30
+        num_states: 512
+        data_dir: data_autotest/dinov2_small
+        num_latents: 6
+        model_type: IntentionLSTM
+      - id: E31
+        num_states: 512
+        data_dir: data_autotest/dinov2_small
+        num_latents: 1
+        model_type: IntentionTransformer
+      - id: E32
+        num_states: 512
+        data_dir: data_autotest/dinov2_small
+        num_latents: 2
+        model_type: IntentionTransformer
+      - id: E33
+        num_states: 512
+        data_dir: data_autotest/dinov2_small
+        num_latents: 3
+        model_type: IntentionTransformer
+      - id: E34
+        num_states: 512
+        data_dir: data_autotest/dinov2_small
+        num_latents: 4
+        model_type: IntentionTransformer
+      - id: E35
+        num_states: 512
+        data_dir: data_autotest/dinov2_small
+        num_latents: 5
+        model_type: IntentionTransformer
+      - id: E36
+        num_states: 512
+        data_dir: data_autotest/dinov2_small
+        num_latents: 6
+        model_type: IntentionTransformer
+      - id: E37
+        num_states: 512
+        data_dir: data_autotest/dinov2_base
+        num_latents: 1
+        model_type: IntentionRNN
+      - id: E38
+        num_states: 512
+        data_dir: data_autotest/dinov2_base
+        num_latents: 2
+        model_type: IntentionRNN
+      - id: E39
+        num_states: 512
+        data_dir: data_autotest/dinov2_base
+        num_latents: 3
+        model_type: IntentionRNN
+      - id: E40
+        num_states: 512
+        data_dir: data_autotest/dinov2_base
+        num_latents: 4
+        model_type: IntentionRNN
+      - id: E41
+        num_states: 512
+        data_dir: data_autotest/dinov2_base
+        num_latents: 5
+        model_type: IntentionRNN
+      - id: E42
+        num_states: 512
+        data_dir: data_autotest/dinov2_base
+        num_latents: 6
+        model_type: IntentionRNN
+      - id: E43
+        num_states: 512
+        data_dir: data_autotest/dinov2_base
+        num_latents: 1
+        model_type: IntentionLSTM
+      - id: E44
+        num_states: 512
+        data_dir: data_autotest/dinov2_base
+        num_latents: 2
+        model_type: IntentionLSTM
+      - id: E45
+        num_states: 512
+        data_dir: data_autotest/dinov2_base
+        num_latents: 3
+        model_type: IntentionLSTM
+      - id: E46
+        num_states: 512
+        data_dir: data_autotest/dinov2_base
+        num_latents: 4
+        model_type: IntentionLSTM
+      - id: E47
+        num_states: 512
+        data_dir: data_autotest/dinov2_base
+        num_latents: 5
+        model_type: IntentionLSTM
+      - id: E48
+        num_states: 512
+        data_dir: data_autotest/dinov2_base
+        num_latents: 6
+        model_type: IntentionLSTM
+      - id: E49
+        num_states: 512
+        data_dir: data_autotest/dinov2_base
+        num_latents: 1
+        model_type: IntentionTransformer
+      - id: E50
+        num_states: 512
+        data_dir: data_autotest/dinov2_base
+        num_latents: 2
+        model_type: IntentionTransformer
+      - id: E51
+        num_states: 512
+        data_dir: data_autotest/dinov2_base
+        num_latents: 3
+        model_type: IntentionTransformer
+      - id: E52
+        num_states: 512
+        data_dir: data_autotest/dinov2_base
+        num_latents: 4
+        model_type: IntentionTransformer
+      - id: E53
+        num_states: 512
+        data_dir: data_autotest/dinov2_base
+        num_latents: 5
+        model_type: IntentionTransformer
+      - id: E54
+        num_states: 512
+        data_dir: data_autotest/dinov2_base
+        num_latents: 6
+        model_type: IntentionTransformer
+      - id: E55
+        num_states: 512
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 1
+        model_type: IntentionRNN
+      - id: E56
+        num_states: 512
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 2
+        model_type: IntentionRNN
+      - id: E57
+        num_states: 512
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 3
+        model_type: IntentionRNN
+      - id: E58
+        num_states: 512
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 4
+        model_type: IntentionRNN
+      - id: E59
+        num_states: 512
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 5
+        model_type: IntentionRNN
+      - id: E60
+        num_states: 512
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 6
+        model_type: IntentionRNN
+      - id: E61
+        num_states: 512
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 1
+        model_type: IntentionLSTM
+      - id: E62
+        num_states: 512
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 2
+        model_type: IntentionLSTM
+      - id: E63
+        num_states: 512
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 3
+        model_type: IntentionLSTM
+      - id: E64
+        num_states: 512
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 4
+        model_type: IntentionLSTM
+      - id: E65
+        num_states: 512
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 5
+        model_type: IntentionLSTM
+      - id: E66
+        num_states: 512
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 6
+        model_type: IntentionLSTM
+      - id: E67
+        num_states: 512
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 1
+        model_type: IntentionTransformer
+      - id: E68
+        num_states: 512
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 2
+        model_type: IntentionTransformer
+      - id: E69
+        num_states: 512
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 3
+        model_type: IntentionTransformer
+      - id: E70
+        num_states: 512
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 4
+        model_type: IntentionTransformer
+      - id: E71
+        num_states: 512
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 5
+        model_type: IntentionTransformer
+      - id: E72
+        num_states: 512
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 6
+        model_type: IntentionTransformer
+
+  States1024-Actions32:
+    id: G02
+    description: "Pre-training model types [1+3]; Intention model types [3]; Latent intention numbers [6]"
+    experiments:
+      - id: E01
+        num_states: 1024
+        data_dir: data_autotest/trajs
+        num_latents: 1
+        model_type: IntentionRNN
+      - id: E02
+        num_states: 1024
+        data_dir: data_autotest/trajs
+        num_latents: 2
+        model_type: IntentionRNN
+      - id: E03
+        num_states: 1024
+        data_dir: data_autotest/trajs
+        num_latents: 3
+        model_type: IntentionRNN
+      - id: E04
+        num_states: 1024
+        data_dir: data_autotest/trajs
+        num_latents: 4
+        model_type: IntentionRNN
+      - id: E05
+        num_states: 1024
+        data_dir: data_autotest/trajs
+        num_latents: 5
+        model_type: IntentionRNN
+      - id: E06
+        num_states: 1024
+        data_dir: data_autotest/trajs
+        num_latents: 6
+        model_type: IntentionRNN
+      - id: E07
+        num_states: 1024
+        data_dir: data_autotest/trajs
+        num_latents: 1
+        model_type: IntentionLSTM
+      - id: E08
+        num_states: 1024
+        data_dir: data_autotest/trajs
+        num_latents: 2
+        model_type: IntentionLSTM
+      - id: E09
+        num_states: 1024
+        data_dir: data_autotest/trajs
+        num_latents: 3
+        model_type: IntentionLSTM
+      - id: E10
+        num_states: 1024
+        data_dir: data_autotest/trajs
+        num_latents: 4
+        model_type: IntentionLSTM
+      - id: E11
+        num_states: 1024
+        data_dir: data_autotest/trajs
+        num_latents: 5
+        model_type: IntentionLSTM
+      - id: E12
+        num_states: 1024
+        data_dir: data_autotest/trajs
+        num_latents: 6
+        model_type: IntentionLSTM
+      - id: E13
+        num_states: 1024
+        data_dir: data_autotest/trajs
+        num_latents: 1
+        model_type: IntentionTransformer
+      - id: E14
+        num_states: 1024
+        data_dir: data_autotest/trajs
+        num_latents: 2
+        model_type: IntentionTransformer
+      - id: E15
+        num_states: 1024
+        data_dir: data_autotest/trajs
+        num_latents: 3
+        model_type: IntentionTransformer
+      - id: E16
+        num_states: 1024
+        data_dir: data_autotest/trajs
+        num_latents: 4
+        model_type: IntentionTransformer
+      - id: E17
+        num_states: 1024
+        data_dir: data_autotest/trajs
+        num_latents: 5
+        model_type: IntentionTransformer
+      - id: E18
+        num_states: 1024
+        data_dir: data_autotest/trajs
+        num_latents: 6
+        model_type: IntentionTransformer
+      - id: E19
+        num_states: 1024
+        data_dir: data_autotest/dinov2_small
+        num_latents: 1
+        model_type: IntentionRNN
+      - id: E20
+        num_states: 1024
+        data_dir: data_autotest/dinov2_small
+        num_latents: 2
+        model_type: IntentionRNN
+      - id: E21
+        num_states: 1024
+        data_dir: data_autotest/dinov2_small
+        num_latents: 3
+        model_type: IntentionRNN
+      - id: E22
+        num_states: 1024
+        data_dir: data_autotest/dinov2_small
+        num_latents: 4
+        model_type: IntentionRNN
+      - id: E23
+        num_states: 1024
+        data_dir: data_autotest/dinov2_small
+        num_latents: 5
+        model_type: IntentionRNN
+      - id: E24
+        num_states: 1024
+        data_dir: data_autotest/dinov2_small
+        num_latents: 6
+        model_type: IntentionRNN
+      - id: E25
+        num_states: 1024
+        data_dir: data_autotest/dinov2_small
+        num_latents: 1
+        model_type: IntentionLSTM
+      - id: E26
+        num_states: 1024
+        data_dir: data_autotest/dinov2_small
+        num_latents: 2
+        model_type: IntentionLSTM
+      - id: E27
+        num_states: 1024
+        data_dir: data_autotest/dinov2_small
+        num_latents: 3
+        model_type: IntentionLSTM
+      - id: E28
+        num_states: 1024
+        data_dir: data_autotest/dinov2_small
+        num_latents: 4
+        model_type: IntentionLSTM
+      - id: E29
+        num_states: 1024
+        data_dir: data_autotest/dinov2_small
+        num_latents: 5
+        model_type: IntentionLSTM
+      - id: E30
+        num_states: 1024
+        data_dir: data_autotest/dinov2_small
+        num_latents: 6
+        model_type: IntentionLSTM
+      - id: E31
+        num_states: 1024
+        data_dir: data_autotest/dinov2_small
+        num_latents: 1
+        model_type: IntentionTransformer
+      - id: E32
+        num_states: 1024
+        data_dir: data_autotest/dinov2_small
+        num_latents: 2
+        model_type: IntentionTransformer
+      - id: E33
+        num_states: 1024
+        data_dir: data_autotest/dinov2_small
+        num_latents: 3
+        model_type: IntentionTransformer
+      - id: E34
+        num_states: 1024
+        data_dir: data_autotest/dinov2_small
+        num_latents: 4
+        model_type: IntentionTransformer
+      - id: E35
+        num_states: 1024
+        data_dir: data_autotest/dinov2_small
+        num_latents: 5
+        model_type: IntentionTransformer
+      - id: E36
+        num_states: 1024
+        data_dir: data_autotest/dinov2_small
+        num_latents: 6
+        model_type: IntentionTransformer
+      - id: E37
+        num_states: 1024
+        data_dir: data_autotest/dinov2_base
+        num_latents: 1
+        model_type: IntentionRNN
+      - id: E38
+        num_states: 1024
+        data_dir: data_autotest/dinov2_base
+        num_latents: 2
+        model_type: IntentionRNN
+      - id: E39
+        num_states: 1024
+        data_dir: data_autotest/dinov2_base
+        num_latents: 3
+        model_type: IntentionRNN
+      - id: E40
+        num_states: 1024
+        data_dir: data_autotest/dinov2_base
+        num_latents: 4
+        model_type: IntentionRNN
+      - id: E41
+        num_states: 1024
+        data_dir: data_autotest/dinov2_base
+        num_latents: 5
+        model_type: IntentionRNN
+      - id: E42
+        num_states: 1024
+        data_dir: data_autotest/dinov2_base
+        num_latents: 6
+        model_type: IntentionRNN
+      - id: E43
+        num_states: 1024
+        data_dir: data_autotest/dinov2_base
+        num_latents: 1
+        model_type: IntentionLSTM
+      - id: E44
+        num_states: 1024
+        data_dir: data_autotest/dinov2_base
+        num_latents: 2
+        model_type: IntentionLSTM
+      - id: E45
+        num_states: 1024
+        data_dir: data_autotest/dinov2_base
+        num_latents: 3
+        model_type: IntentionLSTM
+      - id: E46
+        num_states: 1024
+        data_dir: data_autotest/dinov2_base
+        num_latents: 4
+        model_type: IntentionLSTM
+      - id: E47
+        num_states: 1024
+        data_dir: data_autotest/dinov2_base
+        num_latents: 5
+        model_type: IntentionLSTM
+      - id: E48
+        num_states: 1024
+        data_dir: data_autotest/dinov2_base
+        num_latents: 6
+        model_type: IntentionLSTM
+      - id: E49
+        num_states: 1024
+        data_dir: data_autotest/dinov2_base
+        num_latents: 1
+        model_type: IntentionTransformer
+      - id: E50
+        num_states: 1024
+        data_dir: data_autotest/dinov2_base
+        num_latents: 2
+        model_type: IntentionTransformer
+      - id: E51
+        num_states: 1024
+        data_dir: data_autotest/dinov2_base
+        num_latents: 3
+        model_type: IntentionTransformer
+      - id: E52
+        num_states: 1024
+        data_dir: data_autotest/dinov2_base
+        num_latents: 4
+        model_type: IntentionTransformer
+      - id: E53
+        num_states: 1024
+        data_dir: data_autotest/dinov2_base
+        num_latents: 5
+        model_type: IntentionTransformer
+      - id: E54
+        num_states: 1024
+        data_dir: data_autotest/dinov2_base
+        num_latents: 6
+        model_type: IntentionTransformer
+      - id: E55
+        num_states: 1024
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 1
+        model_type: IntentionRNN
+      - id: E56
+        num_states: 1024
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 2
+        model_type: IntentionRNN
+      - id: E57
+        num_states: 1024
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 3
+        model_type: IntentionRNN
+      - id: E58
+        num_states: 1024
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 4
+        model_type: IntentionRNN
+      - id: E59
+        num_states: 1024
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 5
+        model_type: IntentionRNN
+      - id: E60
+        num_states: 1024
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 6
+        model_type: IntentionRNN
+      - id: E61
+        num_states: 1024
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 1
+        model_type: IntentionLSTM
+      - id: E62
+        num_states: 1024
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 2
+        model_type: IntentionLSTM
+      - id: E63
+        num_states: 1024
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 3
+        model_type: IntentionLSTM
+      - id: E64
+        num_states: 1024
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 4
+        model_type: IntentionLSTM
+      - id: E65
+        num_states: 1024
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 5
+        model_type: IntentionLSTM
+      - id: E66
+        num_states: 1024
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 6
+        model_type: IntentionLSTM
+      - id: E67
+        num_states: 1024
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 1
+        model_type: IntentionTransformer
+      - id: E68
+        num_states: 1024
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 2
+        model_type: IntentionTransformer
+      - id: E69
+        num_states: 1024
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 3
+        model_type: IntentionTransformer
+      - id: E70
+        num_states: 1024
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 4
+        model_type: IntentionTransformer
+      - id: E71
+        num_states: 1024
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 5
+        model_type: IntentionTransformer
+      - id: E72
+        num_states: 1024
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 6
+        model_type: IntentionTransformer
+
+  States1536-Actions32:
+    id: G03
+    description: "Pre-training model types [1+3]; Intention model types [3]; Latent intention numbers [6]"
+    experiments:
+      - id: E01
+        num_states: 1536
+        data_dir: data_autotest/trajs
+        num_latents: 1
+        model_type: IntentionRNN
+      - id: E02
+        num_states: 1536
+        data_dir: data_autotest/trajs
+        num_latents: 2
+        model_type: IntentionRNN
+      - id: E03
+        num_states: 1536
+        data_dir: data_autotest/trajs
+        num_latents: 3
+        model_type: IntentionRNN
+      - id: E04
+        num_states: 1536
+        data_dir: data_autotest/trajs
+        num_latents: 4
+        model_type: IntentionRNN
+      - id: E05
+        num_states: 1536
+        data_dir: data_autotest/trajs
+        num_latents: 5
+        model_type: IntentionRNN
+      - id: E06
+        num_states: 1536
+        data_dir: data_autotest/trajs
+        num_latents: 6
+        model_type: IntentionRNN
+      - id: E07
+        num_states: 1536
+        data_dir: data_autotest/trajs
+        num_latents: 1
+        model_type: IntentionLSTM
+      - id: E08
+        num_states: 1536
+        data_dir: data_autotest/trajs
+        num_latents: 2
+        model_type: IntentionLSTM
+      - id: E09
+        num_states: 1536
+        data_dir: data_autotest/trajs
+        num_latents: 3
+        model_type: IntentionLSTM
+      - id: E10
+        num_states: 1536
+        data_dir: data_autotest/trajs
+        num_latents: 4
+        model_type: IntentionLSTM
+      - id: E11
+        num_states: 1536
+        data_dir: data_autotest/trajs
+        num_latents: 5
+        model_type: IntentionLSTM
+      - id: E12
+        num_states: 1536
+        data_dir: data_autotest/trajs
+        num_latents: 6
+        model_type: IntentionLSTM
+      - id: E13
+        num_states: 1536
+        data_dir: data_autotest/trajs
+        num_latents: 1
+        model_type: IntentionTransformer
+      - id: E14
+        num_states: 1536
+        data_dir: data_autotest/trajs
+        num_latents: 2
+        model_type: IntentionTransformer
+      - id: E15
+        num_states: 1536
+        data_dir: data_autotest/trajs
+        num_latents: 3
+        model_type: IntentionTransformer
+      - id: E16
+        num_states: 1536
+        data_dir: data_autotest/trajs
+        num_latents: 4
+        model_type: IntentionTransformer
+      - id: E17
+        num_states: 1536
+        data_dir: data_autotest/trajs
+        num_latents: 5
+        model_type: IntentionTransformer
+      - id: E18
+        num_states: 1536
+        data_dir: data_autotest/trajs
+        num_latents: 6
+        model_type: IntentionTransformer
+      - id: E19
+        num_states: 1536
+        data_dir: data_autotest/dinov2_small
+        num_latents: 1
+        model_type: IntentionRNN
+      - id: E20
+        num_states: 1536
+        data_dir: data_autotest/dinov2_small
+        num_latents: 2
+        model_type: IntentionRNN
+      - id: E21
+        num_states: 1536
+        data_dir: data_autotest/dinov2_small
+        num_latents: 3
+        model_type: IntentionRNN
+      - id: E22
+        num_states: 1536
+        data_dir: data_autotest/dinov2_small
+        num_latents: 4
+        model_type: IntentionRNN
+      - id: E23
+        num_states: 1536
+        data_dir: data_autotest/dinov2_small
+        num_latents: 5
+        model_type: IntentionRNN
+      - id: E24
+        num_states: 1536
+        data_dir: data_autotest/dinov2_small
+        num_latents: 6
+        model_type: IntentionRNN
+      - id: E25
+        num_states: 1536
+        data_dir: data_autotest/dinov2_small
+        num_latents: 1
+        model_type: IntentionLSTM
+      - id: E26
+        num_states: 1536
+        data_dir: data_autotest/dinov2_small
+        num_latents: 2
+        model_type: IntentionLSTM
+      - id: E27
+        num_states: 1536
+        data_dir: data_autotest/dinov2_small
+        num_latents: 3
+        model_type: IntentionLSTM
+      - id: E28
+        num_states: 1536
+        data_dir: data_autotest/dinov2_small
+        num_latents: 4
+        model_type: IntentionLSTM
+      - id: E29
+        num_states: 1536
+        data_dir: data_autotest/dinov2_small
+        num_latents: 5
+        model_type: IntentionLSTM
+      - id: E30
+        num_states: 1536
+        data_dir: data_autotest/dinov2_small
+        num_latents: 6
+        model_type: IntentionLSTM
+      - id: E31
+        num_states: 1536
+        data_dir: data_autotest/dinov2_small
+        num_latents: 1
+        model_type: IntentionTransformer
+      - id: E32
+        num_states: 1536
+        data_dir: data_autotest/dinov2_small
+        num_latents: 2
+        model_type: IntentionTransformer
+      - id: E33
+        num_states: 1536
+        data_dir: data_autotest/dinov2_small
+        num_latents: 3
+        model_type: IntentionTransformer
+      - id: E34
+        num_states: 1536
+        data_dir: data_autotest/dinov2_small
+        num_latents: 4
+        model_type: IntentionTransformer
+      - id: E35
+        num_states: 1536
+        data_dir: data_autotest/dinov2_small
+        num_latents: 5
+        model_type: IntentionTransformer
+      - id: E36
+        num_states: 1536
+        data_dir: data_autotest/dinov2_small
+        num_latents: 6
+        model_type: IntentionTransformer
+      - id: E37
+        num_states: 1536
+        data_dir: data_autotest/dinov2_base
+        num_latents: 1
+        model_type: IntentionRNN
+      - id: E38
+        num_states: 1536
+        data_dir: data_autotest/dinov2_base
+        num_latents: 2
+        model_type: IntentionRNN
+      - id: E39
+        num_states: 1536
+        data_dir: data_autotest/dinov2_base
+        num_latents: 3
+        model_type: IntentionRNN
+      - id: E40
+        num_states: 1536
+        data_dir: data_autotest/dinov2_base
+        num_latents: 4
+        model_type: IntentionRNN
+      - id: E41
+        num_states: 1536
+        data_dir: data_autotest/dinov2_base
+        num_latents: 5
+        model_type: IntentionRNN
+      - id: E42
+        num_states: 1536
+        data_dir: data_autotest/dinov2_base
+        num_latents: 6
+        model_type: IntentionRNN
+      - id: E43
+        num_states: 1536
+        data_dir: data_autotest/dinov2_base
+        num_latents: 1
+        model_type: IntentionLSTM
+      - id: E44
+        num_states: 1536
+        data_dir: data_autotest/dinov2_base
+        num_latents: 2
+        model_type: IntentionLSTM
+      - id: E45
+        num_states: 1536
+        data_dir: data_autotest/dinov2_base
+        num_latents: 3
+        model_type: IntentionLSTM
+      - id: E46
+        num_states: 1536
+        data_dir: data_autotest/dinov2_base
+        num_latents: 4
+        model_type: IntentionLSTM
+      - id: E47
+        num_states: 1536
+        data_dir: data_autotest/dinov2_base
+        num_latents: 5
+        model_type: IntentionLSTM
+      - id: E48
+        num_states: 1536
+        data_dir: data_autotest/dinov2_base
+        num_latents: 6
+        model_type: IntentionLSTM
+      - id: E49
+        num_states: 1536
+        data_dir: data_autotest/dinov2_base
+        num_latents: 1
+        model_type: IntentionTransformer
+      - id: E50
+        num_states: 1536
+        data_dir: data_autotest/dinov2_base
+        num_latents: 2
+        model_type: IntentionTransformer
+      - id: E51
+        num_states: 1536
+        data_dir: data_autotest/dinov2_base
+        num_latents: 3
+        model_type: IntentionTransformer
+      - id: E52
+        num_states: 1536
+        data_dir: data_autotest/dinov2_base
+        num_latents: 4
+        model_type: IntentionTransformer
+      - id: E53
+        num_states: 1536
+        data_dir: data_autotest/dinov2_base
+        num_latents: 5
+        model_type: IntentionTransformer
+      - id: E54
+        num_states: 1536
+        data_dir: data_autotest/dinov2_base
+        num_latents: 6
+        model_type: IntentionTransformer
+      - id: E55
+        num_states: 1536
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 1
+        model_type: IntentionRNN
+      - id: E56
+        num_states: 1536
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 2
+        model_type: IntentionRNN
+      - id: E57
+        num_states: 1536
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 3
+        model_type: IntentionRNN
+      - id: E58
+        num_states: 1536
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 4
+        model_type: IntentionRNN
+      - id: E59
+        num_states: 1536
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 5
+        model_type: IntentionRNN
+      - id: E60
+        num_states: 1536
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 6
+        model_type: IntentionRNN
+      - id: E61
+        num_states: 1536
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 1
+        model_type: IntentionLSTM
+      - id: E62
+        num_states: 1536
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 2
+        model_type: IntentionLSTM
+      - id: E63
+        num_states: 1536
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 3
+        model_type: IntentionLSTM
+      - id: E64
+        num_states: 1536
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 4
+        model_type: IntentionLSTM
+      - id: E65
+        num_states: 1536
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 5
+        model_type: IntentionLSTM
+      - id: E66
+        num_states: 1536
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 6
+        model_type: IntentionLSTM
+      - id: E67
+        num_states: 1536
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 1
+        model_type: IntentionTransformer
+      - id: E68
+        num_states: 1536
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 2
+        model_type: IntentionTransformer
+      - id: E69
+        num_states: 1536
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 3
+        model_type: IntentionTransformer
+      - id: E70
+        num_states: 1536
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 4
+        model_type: IntentionTransformer
+      - id: E71
+        num_states: 1536
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 5
+        model_type: IntentionTransformer
+      - id: E72
+        num_states: 1536
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 6
+        model_type: IntentionTransformer
+
+  States2048-Actions32:
+    id: G04
+    description: "Pre-training model types [1+3]; Intention model types [3]; Latent intention numbers [6]"
+    experiments:
+      - id: E01
+        num_states: 2048
+        data_dir: data_autotest/trajs
+        num_latents: 1
+        model_type: IntentionRNN
+      - id: E02
+        num_states: 2048
+        data_dir: data_autotest/trajs
+        num_latents: 2
+        model_type: IntentionRNN
+      - id: E03
+        num_states: 2048
+        data_dir: data_autotest/trajs
+        num_latents: 3
+        model_type: IntentionRNN
+      - id: E04
+        num_states: 2048
+        data_dir: data_autotest/trajs
+        num_latents: 4
+        model_type: IntentionRNN
+      - id: E05
+        num_states: 2048
+        data_dir: data_autotest/trajs
+        num_latents: 5
+        model_type: IntentionRNN
+      - id: E06
+        num_states: 2048
+        data_dir: data_autotest/trajs
+        num_latents: 6
+        model_type: IntentionRNN
+      - id: E07
+        num_states: 2048
+        data_dir: data_autotest/trajs
+        num_latents: 1
+        model_type: IntentionLSTM
+      - id: E08
+        num_states: 2048
+        data_dir: data_autotest/trajs
+        num_latents: 2
+        model_type: IntentionLSTM
+      - id: E09
+        num_states: 2048
+        data_dir: data_autotest/trajs
+        num_latents: 3
+        model_type: IntentionLSTM
+      - id: E10
+        num_states: 2048
+        data_dir: data_autotest/trajs
+        num_latents: 4
+        model_type: IntentionLSTM
+      - id: E11
+        num_states: 2048
+        data_dir: data_autotest/trajs
+        num_latents: 5
+        model_type: IntentionLSTM
+      - id: E12
+        num_states: 2048
+        data_dir: data_autotest/trajs
+        num_latents: 6
+        model_type: IntentionLSTM
+      - id: E13
+        num_states: 2048
+        data_dir: data_autotest/trajs
+        num_latents: 1
+        model_type: IntentionTransformer
+      - id: E14
+        num_states: 2048
+        data_dir: data_autotest/trajs
+        num_latents: 2
+        model_type: IntentionTransformer
+      - id: E15
+        num_states: 2048
+        data_dir: data_autotest/trajs
+        num_latents: 3
+        model_type: IntentionTransformer
+      - id: E16
+        num_states: 2048
+        data_dir: data_autotest/trajs
+        num_latents: 4
+        model_type: IntentionTransformer
+      - id: E17
+        num_states: 2048
+        data_dir: data_autotest/trajs
+        num_latents: 5
+        model_type: IntentionTransformer
+      - id: E18
+        num_states: 2048
+        data_dir: data_autotest/trajs
+        num_latents: 6
+        model_type: IntentionTransformer
+      - id: E19
+        num_states: 2048
+        data_dir: data_autotest/dinov2_small
+        num_latents: 1
+        model_type: IntentionRNN
+      - id: E20
+        num_states: 2048
+        data_dir: data_autotest/dinov2_small
+        num_latents: 2
+        model_type: IntentionRNN
+      - id: E21
+        num_states: 2048
+        data_dir: data_autotest/dinov2_small
+        num_latents: 3
+        model_type: IntentionRNN
+      - id: E22
+        num_states: 2048
+        data_dir: data_autotest/dinov2_small
+        num_latents: 4
+        model_type: IntentionRNN
+      - id: E23
+        num_states: 2048
+        data_dir: data_autotest/dinov2_small
+        num_latents: 5
+        model_type: IntentionRNN
+      - id: E24
+        num_states: 2048
+        data_dir: data_autotest/dinov2_small
+        num_latents: 6
+        model_type: IntentionRNN
+      - id: E25
+        num_states: 2048
+        data_dir: data_autotest/dinov2_small
+        num_latents: 1
+        model_type: IntentionLSTM
+      - id: E26
+        num_states: 2048
+        data_dir: data_autotest/dinov2_small
+        num_latents: 2
+        model_type: IntentionLSTM
+      - id: E27
+        num_states: 2048
+        data_dir: data_autotest/dinov2_small
+        num_latents: 3
+        model_type: IntentionLSTM
+      - id: E28
+        num_states: 2048
+        data_dir: data_autotest/dinov2_small
+        num_latents: 4
+        model_type: IntentionLSTM
+      - id: E29
+        num_states: 2048
+        data_dir: data_autotest/dinov2_small
+        num_latents: 5
+        model_type: IntentionLSTM
+      - id: E30
+        num_states: 2048
+        data_dir: data_autotest/dinov2_small
+        num_latents: 6
+        model_type: IntentionLSTM
+      - id: E31
+        num_states: 2048
+        data_dir: data_autotest/dinov2_small
+        num_latents: 1
+        model_type: IntentionTransformer
+      - id: E32
+        num_states: 2048
+        data_dir: data_autotest/dinov2_small
+        num_latents: 2
+        model_type: IntentionTransformer
+      - id: E33
+        num_states: 2048
+        data_dir: data_autotest/dinov2_small
+        num_latents: 3
+        model_type: IntentionTransformer
+      - id: E34
+        num_states: 2048
+        data_dir: data_autotest/dinov2_small
+        num_latents: 4
+        model_type: IntentionTransformer
+      - id: E35
+        num_states: 2048
+        data_dir: data_autotest/dinov2_small
+        num_latents: 5
+        model_type: IntentionTransformer
+      - id: E36
+        num_states: 2048
+        data_dir: data_autotest/dinov2_small
+        num_latents: 6
+        model_type: IntentionTransformer
+      - id: E37
+        num_states: 2048
+        data_dir: data_autotest/dinov2_base
+        num_latents: 1
+        model_type: IntentionRNN
+      - id: E38
+        num_states: 2048
+        data_dir: data_autotest/dinov2_base
+        num_latents: 2
+        model_type: IntentionRNN
+      - id: E39
+        num_states: 2048
+        data_dir: data_autotest/dinov2_base
+        num_latents: 3
+        model_type: IntentionRNN
+      - id: E40
+        num_states: 2048
+        data_dir: data_autotest/dinov2_base
+        num_latents: 4
+        model_type: IntentionRNN
+      - id: E41
+        num_states: 2048
+        data_dir: data_autotest/dinov2_base
+        num_latents: 5
+        model_type: IntentionRNN
+      - id: E42
+        num_states: 2048
+        data_dir: data_autotest/dinov2_base
+        num_latents: 6
+        model_type: IntentionRNN
+      - id: E43
+        num_states: 2048
+        data_dir: data_autotest/dinov2_base
+        num_latents: 1
+        model_type: IntentionLSTM
+      - id: E44
+        num_states: 2048
+        data_dir: data_autotest/dinov2_base
+        num_latents: 2
+        model_type: IntentionLSTM
+      - id: E45
+        num_states: 2048
+        data_dir: data_autotest/dinov2_base
+        num_latents: 3
+        model_type: IntentionLSTM
+      - id: E46
+        num_states: 2048
+        data_dir: data_autotest/dinov2_base
+        num_latents: 4
+        model_type: IntentionLSTM
+      - id: E47
+        num_states: 2048
+        data_dir: data_autotest/dinov2_base
+        num_latents: 5
+        model_type: IntentionLSTM
+      - id: E48
+        num_states: 2048
+        data_dir: data_autotest/dinov2_base
+        num_latents: 6
+        model_type: IntentionLSTM
+      - id: E49
+        num_states: 2048
+        data_dir: data_autotest/dinov2_base
+        num_latents: 1
+        model_type: IntentionTransformer
+      - id: E50
+        num_states: 2048
+        data_dir: data_autotest/dinov2_base
+        num_latents: 2
+        model_type: IntentionTransformer
+      - id: E51
+        num_states: 2048
+        data_dir: data_autotest/dinov2_base
+        num_latents: 3
+        model_type: IntentionTransformer
+      - id: E52
+        num_states: 2048
+        data_dir: data_autotest/dinov2_base
+        num_latents: 4
+        model_type: IntentionTransformer
+      - id: E53
+        num_states: 2048
+        data_dir: data_autotest/dinov2_base
+        num_latents: 5
+        model_type: IntentionTransformer
+      - id: E54
+        num_states: 2048
+        data_dir: data_autotest/dinov2_base
+        num_latents: 6
+        model_type: IntentionTransformer
+      - id: E55
+        num_states: 2048
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 1
+        model_type: IntentionRNN
+      - id: E56
+        num_states: 2048
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 2
+        model_type: IntentionRNN
+      - id: E57
+        num_states: 2048
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 3
+        model_type: IntentionRNN
+      - id: E58
+        num_states: 2048
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 4
+        model_type: IntentionRNN
+      - id: E59
+        num_states: 2048
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 5
+        model_type: IntentionRNN
+      - id: E60
+        num_states: 2048
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 6
+        model_type: IntentionRNN
+      - id: E61
+        num_states: 2048
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 1
+        model_type: IntentionLSTM
+      - id: E62
+        num_states: 2048
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 2
+        model_type: IntentionLSTM
+      - id: E63
+        num_states: 2048
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 3
+        model_type: IntentionLSTM
+      - id: E64
+        num_states: 2048
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 4
+        model_type: IntentionLSTM
+      - id: E65
+        num_states: 2048
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 5
+        model_type: IntentionLSTM
+      - id: E66
+        num_states: 2048
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 6
+        model_type: IntentionLSTM
+      - id: E67
+        num_states: 2048
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 1
+        model_type: IntentionTransformer
+      - id: E68
+        num_states: 2048
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 2
+        model_type: IntentionTransformer
+      - id: E69
+        num_states: 2048
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 3
+        model_type: IntentionTransformer
+      - id: E70
+        num_states: 2048
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 4
+        model_type: IntentionTransformer
+      - id: E71
+        num_states: 2048
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 5
+        model_type: IntentionTransformer
+      - id: E72
+        num_states: 2048
+        data_dir: data_autotest/dinov2_giant
+        num_latents: 6
+        model_type: IntentionTransformer
+

@@ -25,6 +25,7 @@ PARAM_KEYS = [
     'model_type', 'hidden_dim', 'rnn_hidden_dim', 'num_layers', 'dropout', 'nhead', 'lr',
     'reg_type', 'reg_weight',
     'num_epochs', 'loss_threshold', 'max_iterations',
+    'save_npy',
 ]
 
 
