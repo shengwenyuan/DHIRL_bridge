@@ -33,9 +33,31 @@ defaults:
 
 
 groups:
+  intention_num:
+    id: G01
+    description: "All NS = 512 data cases from data_autotest/trajs, test intention num 1 - 6"
+    experiments:
+      - id: E01
+        data_dir: data_autotest/trajs
+        num_latents: 1
+      - id: E02
+        data_dir: data_autotest/trajs
+        num_latents: 2
+      - id: E03
+        data_dir: data_autotest/trajs
+        num_latents: 3
+      - id: E04
+        data_dir: data_autotest/trajs
+        num_latents: 4
+      - id: E05
+        data_dir: data_autotest/trajs
+        num_latents: 5
+      - id: E06
+        data_dir: data_autotest/trajs
+        num_latents: 6
 
   3072states-autotest:
-    id: G01
+    id: G02
     description: "All NS = 3072 data cases from data_autotest/trajs"
     experiments:
       - id: E01
@@ -59,52 +81,27 @@ groups:
         num_states: 3072
         num_actions: 32
 
-  1536states-autotest:
-    id: G02
-    description: "All NS = 1536 data cases from data_autotest/trajs"
-    experiments:
-      - id: E01
-        data_dir: data_autotest/trajs
-        num_states: 1536
-        num_actions: 32
-      - id: E02
-        data_dir: data_autotest/dinov2_small
-        num_states: 1536
-        num_actions: 32
-      - id: E03
-        data_dir: data_autotest/dinov2_base
-        num_states: 1536
-        num_actions: 32
-      - id: E04
-        data_dir: data_autotest/dinov2_large
-        num_states: 1536
-        num_actions: 32
-      - id: E05
-        data_dir: data_autotest/dinov2_giant
-        num_states: 1536
-        num_actions: 32
-
-  512states48actions-autotest:
-    id: G03
-    description: "All NS = 512 data cases from data_autotest/trajs"
-    experiments:
-      - id: E01
-        data_dir: data_autotest/trajs
-        num_states: 512
-        num_actions: 48
-      - id: E02
-        data_dir: data_autotest/dinov2_small
-        num_states: 512
-        num_actions: 48
-      - id: E03
-        data_dir: data_autotest/dinov2_base
-        num_states: 512
-        num_actions: 48
-      - id: E04
-        data_dir: data_autotest/dinov2_large
-        num_states: 512
-        num_actions: 48
-      - id: E05
-        data_dir: data_autotest/dinov2_giant
-        num_states: 512
-        num_actions: 48
+  # 512states48actions-autotest:
+  #   id: G03
+  #   description: "All NS = 512 data cases from data_autotest/trajs"
+  #   experiments:
+  #     - id: E01
+  #       data_dir: data_autotest/trajs
+  #       num_states: 512
+  #       num_actions: 48
+  #     - id: E02
+  #       data_dir: data_autotest/dinov2_small
+  #       num_states: 512
+  #       num_actions: 48
+  #     - id: E03
+  #       data_dir: data_autotest/dinov2_base
+  #       num_states: 512
+  #       num_actions: 48
+  #     - id: E04
+  #       data_dir: data_autotest/dinov2_large
+  #       num_states: 512
+  #       num_actions: 48
+  #     - id: E05
+  #       data_dir: data_autotest/dinov2_giant
+  #       num_states: 512
+  #       num_actions: 48
