@@ -14,6 +14,7 @@ import yaml
 import subprocess
 import datetime
 import argparse
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 TRAIN_MODULE = 'src_autotest.train_bridge'
 
@@ -80,6 +81,8 @@ def main():
                         help='Run only the listed groups (default: all)')
     parser.add_argument('--log_dir', type=str, default=None,
                         help='Override log directory')
+    parser.add_argument('--max_parallel', type=int, default=1,
+                        help='Max experiments to run concurrently (default: 1 = sequential)')
     args = parser.parse_args()
 
     cfg = load_config(args.config)
@@ -95,6 +98,8 @@ def main():
 
     summary_rows = []
 
+    # Collect all jobs
+    all_jobs = []
     for group_name, group_cfg in groups.items():
         description = group_cfg.get('description', '')
         experiments = group_cfg.get('experiments', [])
@@ -120,19 +125,37 @@ def main():
             label = label_from_overrides(exp, defaults)
             cmd = build_command(params)
             log_path = os.path.join(group_log_dir, f'{eid}.log')
+            tag = f'{gid}/{eid}'
+            all_jobs.append((cmd, log_path, gid, label, tag))
 
-            print(f'\n  >> [{gid}/{eid}] {label}')
+    if args.max_parallel <= 1:
+        # Sequential (original behavior)
+        for cmd, log_path, gid, label, tag in all_jobs:
+            print(f'\n  >> [{tag}] {label}')
             print(f'     log: {log_path}')
-
             status, elapsed = run_one(cmd, log_path, gid, label)
-
             print(f'     {status}  ({elapsed})')
             summary_rows.append({
-                'tag': f'{gid}/{eid}',
-                'label': label,
-                'status': status,
-                'elapsed': str(elapsed),
+                'tag': tag, 'label': label,
+                'status': status, 'elapsed': str(elapsed),
             })
+    else:
+        print(f'\n  Running up to {args.max_parallel} experiments in parallel')
+        for cmd, log_path, _, label, tag in all_jobs:
+            print(f'  >> [{tag}] {label}  log: {log_path}')
+        with ThreadPoolExecutor(max_workers=args.max_parallel) as executor:
+            future_to_job = {}
+            for cmd, log_path, gid, label, tag in all_jobs:
+                future = executor.submit(run_one, cmd, log_path, gid, label)
+                future_to_job[future] = (tag, label)
+            for future in as_completed(future_to_job):
+                tag, label = future_to_job[future]
+                status, elapsed = future.result()
+                print(f'  [{tag}] {status}  ({elapsed})')
+                summary_rows.append({
+                    'tag': tag, 'label': label,
+                    'status': status, 'elapsed': str(elapsed),
+                })
 
     summary_path = os.path.join(log_root, 'summary.txt')
     with open(summary_path, 'w') as sf:

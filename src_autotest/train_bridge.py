@@ -94,7 +94,7 @@ if __name__ == '__main__':
                                 reg_type=args.reg_type, reg_weight=args.reg_weight,
                                 num_epochs=args.num_epochs, loss_threshold=args.loss_threshold,
                                 max_iterations=args.max_iterations)
-                ll, f, mask, agents = model.fit()
+                ll, f, mask, batched_iavi = model.fit()
                 if ll['test'] > best_test_ll:
                     best_test_ll = ll['test']
                     best_ll = ll
@@ -105,8 +105,8 @@ if __name__ == '__main__':
                         np.save(os.path.join(param_dir, 'mask_train.npy'), mask['train'])
                         np.save(os.path.join(param_dir, 'f_test.npy'), f['test'])
                         np.save(os.path.join(param_dir, 'mask_test.npy'), mask['test'])
-                        for agent_idx, agent in enumerate(agents):
-                            np.save(os.path.join(param_dir, f'r_{agent_idx}.npy'), agent.r.cpu().numpy())
-                            np.save(os.path.join(param_dir, f'q_{agent_idx}.npy'), agent.q.cpu().numpy())
+                        for agent_idx in range(batched_iavi.K):
+                            np.save(os.path.join(param_dir, f'r_{agent_idx}.npy'), batched_iavi.r[agent_idx].cpu().numpy())
+                            np.save(os.path.join(param_dir, f'q_{agent_idx}.npy'), batched_iavi.q[agent_idx].cpu().numpy())
             output_df.loc[len(output_df)] = [num_trajs, kf_idx, best_ll['train'], best_ll['test']]
             output_df.to_csv(os.path.join(run_dir, args.ll_filename), index=False)
