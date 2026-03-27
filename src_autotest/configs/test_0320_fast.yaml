@@ -102,37 +102,37 @@ groups:
         data_dir: data_autotest/trajs
         num_latents: 1
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E14
         num_states: 512
         data_dir: data_autotest/trajs
         num_latents: 2
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E15
         num_states: 512
         data_dir: data_autotest/trajs
         num_latents: 3
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E16
         num_states: 512
         data_dir: data_autotest/trajs
         num_latents: 4
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E17
         num_states: 512
         data_dir: data_autotest/trajs
         num_latents: 5
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E18
         num_states: 512
         data_dir: data_autotest/trajs
         num_latents: 6
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E19
         num_states: 512
         data_dir: data_autotest/dinov2_small
@@ -198,37 +198,37 @@ groups:
         data_dir: data_autotest/dinov2_small
         num_latents: 1
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E32
         num_states: 512
         data_dir: data_autotest/dinov2_small
         num_latents: 2
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E33
         num_states: 512
         data_dir: data_autotest/dinov2_small
         num_latents: 3
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E34
         num_states: 512
         data_dir: data_autotest/dinov2_small
         num_latents: 4
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E35
         num_states: 512
         data_dir: data_autotest/dinov2_small
         num_latents: 5
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E36
         num_states: 512
         data_dir: data_autotest/dinov2_small
         num_latents: 6
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E37
         num_states: 512
         data_dir: data_autotest/dinov2_base
@@ -294,37 +294,37 @@ groups:
         data_dir: data_autotest/dinov2_base
         num_latents: 1
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E50
         num_states: 512
         data_dir: data_autotest/dinov2_base
         num_latents: 2
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E51
         num_states: 512
         data_dir: data_autotest/dinov2_base
         num_latents: 3
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E52
         num_states: 512
         data_dir: data_autotest/dinov2_base
         num_latents: 4
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E53
         num_states: 512
         data_dir: data_autotest/dinov2_base
         num_latents: 5
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E54
         num_states: 512
         data_dir: data_autotest/dinov2_base
         num_latents: 6
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E55
         num_states: 512
         data_dir: data_autotest/dinov2_giant
@@ -390,37 +390,37 @@ groups:
         data_dir: data_autotest/dinov2_giant
         num_latents: 1
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E68
         num_states: 512
         data_dir: data_autotest/dinov2_giant
         num_latents: 2
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E69
         num_states: 512
         data_dir: data_autotest/dinov2_giant
         num_latents: 3
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E70
         num_states: 512
         data_dir: data_autotest/dinov2_giant
         num_latents: 4
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E71
         num_states: 512
         data_dir: data_autotest/dinov2_giant
         num_latents: 5
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E72
         num_states: 512
         data_dir: data_autotest/dinov2_giant
         num_latents: 6
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
 
   States1024-Actions32:
     id: G02
@@ -491,37 +491,37 @@ groups:
         data_dir: data_autotest/trajs
         num_latents: 1
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E14
         num_states: 1024
         data_dir: data_autotest/trajs
         num_latents: 2
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E15
         num_states: 1024
         data_dir: data_autotest/trajs
         num_latents: 3
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E16
         num_states: 1024
         data_dir: data_autotest/trajs
         num_latents: 4
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E17
         num_states: 1024
         data_dir: data_autotest/trajs
         num_latents: 5
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E18
         num_states: 1024
         data_dir: data_autotest/trajs
         num_latents: 6
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E19
         num_states: 1024
         data_dir: data_autotest/dinov2_small
@@ -587,37 +587,37 @@ groups:
         data_dir: data_autotest/dinov2_small
         num_latents: 1
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E32
         num_states: 1024
         data_dir: data_autotest/dinov2_small
         num_latents: 2
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E33
         num_states: 1024
         data_dir: data_autotest/dinov2_small
         num_latents: 3
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E34
         num_states: 1024
         data_dir: data_autotest/dinov2_small
         num_latents: 4
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E35
         num_states: 1024
         data_dir: data_autotest/dinov2_small
         num_latents: 5
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E36
         num_states: 1024
         data_dir: data_autotest/dinov2_small
         num_latents: 6
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E37
         num_states: 1024
         data_dir: data_autotest/dinov2_base
@@ -683,37 +683,37 @@ groups:
         data_dir: data_autotest/dinov2_base
         num_latents: 1
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E50
         num_states: 1024
         data_dir: data_autotest/dinov2_base
         num_latents: 2
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E51
         num_states: 1024
         data_dir: data_autotest/dinov2_base
         num_latents: 3
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E52
         num_states: 1024
         data_dir: data_autotest/dinov2_base
         num_latents: 4
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E53
         num_states: 1024
         data_dir: data_autotest/dinov2_base
         num_latents: 5
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E54
         num_states: 1024
         data_dir: data_autotest/dinov2_base
         num_latents: 6
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E55
         num_states: 1024
         data_dir: data_autotest/dinov2_giant
@@ -779,37 +779,37 @@ groups:
         data_dir: data_autotest/dinov2_giant
         num_latents: 1
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E68
         num_states: 1024
         data_dir: data_autotest/dinov2_giant
         num_latents: 2
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E69
         num_states: 1024
         data_dir: data_autotest/dinov2_giant
         num_latents: 3
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E70
         num_states: 1024
         data_dir: data_autotest/dinov2_giant
         num_latents: 4
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E71
         num_states: 1024
         data_dir: data_autotest/dinov2_giant
         num_latents: 5
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E72
         num_states: 1024
         data_dir: data_autotest/dinov2_giant
         num_latents: 6
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
 
   States1536-Actions32:
     id: G03
@@ -880,37 +880,37 @@ groups:
         data_dir: data_autotest/trajs
         num_latents: 1
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E14
         num_states: 1536
         data_dir: data_autotest/trajs
         num_latents: 2
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E15
         num_states: 1536
         data_dir: data_autotest/trajs
         num_latents: 3
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E16
         num_states: 1536
         data_dir: data_autotest/trajs
         num_latents: 4
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E17
         num_states: 1536
         data_dir: data_autotest/trajs
         num_latents: 5
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E18
         num_states: 1536
         data_dir: data_autotest/trajs
         num_latents: 6
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E19
         num_states: 1536
         data_dir: data_autotest/dinov2_small
@@ -976,37 +976,37 @@ groups:
         data_dir: data_autotest/dinov2_small
         num_latents: 1
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E32
         num_states: 1536
         data_dir: data_autotest/dinov2_small
         num_latents: 2
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E33
         num_states: 1536
         data_dir: data_autotest/dinov2_small
         num_latents: 3
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E34
         num_states: 1536
         data_dir: data_autotest/dinov2_small
         num_latents: 4
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E35
         num_states: 1536
         data_dir: data_autotest/dinov2_small
         num_latents: 5
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E36
         num_states: 1536
         data_dir: data_autotest/dinov2_small
         num_latents: 6
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E37
         num_states: 1536
         data_dir: data_autotest/dinov2_base
@@ -1072,37 +1072,37 @@ groups:
         data_dir: data_autotest/dinov2_base
         num_latents: 1
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E50
         num_states: 1536
         data_dir: data_autotest/dinov2_base
         num_latents: 2
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E51
         num_states: 1536
         data_dir: data_autotest/dinov2_base
         num_latents: 3
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E52
         num_states: 1536
         data_dir: data_autotest/dinov2_base
         num_latents: 4
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E53
         num_states: 1536
         data_dir: data_autotest/dinov2_base
         num_latents: 5
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E54
         num_states: 1536
         data_dir: data_autotest/dinov2_base
         num_latents: 6
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E55
         num_states: 1536
         data_dir: data_autotest/dinov2_giant
@@ -1168,37 +1168,37 @@ groups:
         data_dir: data_autotest/dinov2_giant
         num_latents: 1
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E68
         num_states: 1536
         data_dir: data_autotest/dinov2_giant
         num_latents: 2
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E69
         num_states: 1536
         data_dir: data_autotest/dinov2_giant
         num_latents: 3
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E70
         num_states: 1536
         data_dir: data_autotest/dinov2_giant
         num_latents: 4
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E71
         num_states: 1536
         data_dir: data_autotest/dinov2_giant
         num_latents: 5
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E72
         num_states: 1536
         data_dir: data_autotest/dinov2_giant
         num_latents: 6
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
 
   States2048-Actions32:
     id: G04
@@ -1269,37 +1269,37 @@ groups:
         data_dir: data_autotest/trajs
         num_latents: 1
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E14
         num_states: 2048
         data_dir: data_autotest/trajs
         num_latents: 2
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E15
         num_states: 2048
         data_dir: data_autotest/trajs
         num_latents: 3
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E16
         num_states: 2048
         data_dir: data_autotest/trajs
         num_latents: 4
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E17
         num_states: 2048
         data_dir: data_autotest/trajs
         num_latents: 5
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E18
         num_states: 2048
         data_dir: data_autotest/trajs
         num_latents: 6
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E19
         num_states: 2048
         data_dir: data_autotest/dinov2_small
@@ -1365,37 +1365,37 @@ groups:
         data_dir: data_autotest/dinov2_small
         num_latents: 1
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E32
         num_states: 2048
         data_dir: data_autotest/dinov2_small
         num_latents: 2
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E33
         num_states: 2048
         data_dir: data_autotest/dinov2_small
         num_latents: 3
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E34
         num_states: 2048
         data_dir: data_autotest/dinov2_small
         num_latents: 4
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E35
         num_states: 2048
         data_dir: data_autotest/dinov2_small
         num_latents: 5
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E36
         num_states: 2048
         data_dir: data_autotest/dinov2_small
         num_latents: 6
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E37
         num_states: 2048
         data_dir: data_autotest/dinov2_base
@@ -1461,37 +1461,37 @@ groups:
         data_dir: data_autotest/dinov2_base
         num_latents: 1
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E50
         num_states: 2048
         data_dir: data_autotest/dinov2_base
         num_latents: 2
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E51
         num_states: 2048
         data_dir: data_autotest/dinov2_base
         num_latents: 3
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E52
         num_states: 2048
         data_dir: data_autotest/dinov2_base
         num_latents: 4
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E53
         num_states: 2048
         data_dir: data_autotest/dinov2_base
         num_latents: 5
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E54
         num_states: 2048
         data_dir: data_autotest/dinov2_base
         num_latents: 6
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E55
         num_states: 2048
         data_dir: data_autotest/dinov2_giant
@@ -1557,35 +1557,35 @@ groups:
         data_dir: data_autotest/dinov2_giant
         num_latents: 1
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E68
         num_states: 2048
         data_dir: data_autotest/dinov2_giant
         num_latents: 2
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E69
         num_states: 2048
         data_dir: data_autotest/dinov2_giant
         num_latents: 3
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E70
         num_states: 2048
         data_dir: data_autotest/dinov2_giant
         num_latents: 4
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E71
         num_states: 2048
         data_dir: data_autotest/dinov2_giant
         num_latents: 5
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
       - id: E72
         num_states: 2048
         data_dir: data_autotest/dinov2_giant
         num_latents: 6
         model_type: IntentionTransformer
-        num_layers: 8
+        num_epochs: 8
 
