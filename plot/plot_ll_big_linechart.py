@@ -21,6 +21,10 @@ from pathlib import Path
 
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.offsetbox import (AnchoredOffsetbox, HPacker, VPacker,
+                                  DrawingArea)
+from matplotlib.lines import Line2D
+from matplotlib.text import Text
 import yaml
 
 
@@ -37,14 +41,26 @@ MODEL_BASE_COLORS = {
 MODEL_SHORT = {
     "IntentionLSTM":        "LSTM",
     "IntentionRNN":         "RNN",
-    "IntentionTransformer": "Transformer",
+    "IntentionTransformer": "TF",
+}
+
+MODEL_ZORDER = {
+    "IntentionRNN":         4,
+    "IntentionLSTM":        3,
+    "IntentionTransformer": 2,
+}
+
+MODEL_ALPHA = {
+    "IntentionRNN":         0.85,
+    "IntentionLSTM":        0.70,
+    "IntentionTransformer": 0.55,
 }
 
 PRETRAIN_TITLES = {
-    "trajs":        "Pre-train: Trajectories",
-    "dinov2_small": "Pre-train: DINOv2-Small",
-    "dinov2_base":  "Pre-train: DINOv2-Base",
-    "dinov2_giant": "Pre-train: DINOv2-Giant",
+    "trajs":        "CRL Encoder",
+    "dinov2_small": "DINOv2-S",
+    "dinov2_base":  "DINOv2-B",
+    "dinov2_giant": "DINOv2-g",
 }
 
 PRETRAIN_ORDER = ["trajs", "dinov2_small", "dinov2_base", "dinov2_giant"]
@@ -212,11 +228,10 @@ def main():
     all_nstates = sorted({k[3] for k in data})
     n_latents_levels = len(all_latents)
 
-    # ── Figure layout: subplots by pretrain type ─────────────────
+    # ── Figure layout: single row, one panel per pretrain ────────
     n_pretrains = len(all_pretrains)
-    ncols = min(n_pretrains, 2)
-    nrows = (n_pretrains + ncols - 1) // ncols
-    fig, axes = plt.subplots(nrows, ncols, figsize=(9 * ncols, 6.5 * nrows),
+    fig, axes = plt.subplots(1, n_pretrains,
+                             figsize=(4.5 * n_pretrains + 1.8, 4.8),
                              sharey=True, squeeze=False)
     axes_flat = axes.flatten()
 
@@ -228,11 +243,13 @@ def main():
     for ax_idx, pretrain in enumerate(all_pretrains):
         ax = axes_flat[ax_idx]
         ax.set_title(PRETRAIN_TITLES.get(pretrain, f"Pre-train: {pretrain}"),
-                     fontsize=14, fontweight="bold")
+                     fontsize=14)
 
-        for model_type in all_models:
+        for model_type in reversed(all_models):   # draw least-important first
             base_rgb = MODEL_BASE_COLORS.get(model_type, (0.5, 0.5, 0.5))
             short_name = MODEL_SHORT.get(model_type, model_type)
+            zo = MODEL_ZORDER.get(model_type, 2)
+            alph = MODEL_ALPHA.get(model_type, 0.9)
 
             for lat_idx, nl in enumerate(all_latents):
                 color = shade_color(base_rgb, lat_idx, n_latents_levels)
@@ -259,15 +276,15 @@ def main():
 
                 label = f"{short_name}, K={nl}"
                 ax.plot(x_pos, means, marker=marker, markersize=5,
-                        linewidth=1.8, color=color, label=label, alpha=0.9)
+                        linewidth=1.8, color=color, label=label,
+                        alpha=alph, zorder=zo)
                 ax.fill_between(x_pos, means - stds, means + stds,
-                                color=color, alpha=0.12)
+                                color=color, alpha=0.10 * alph, zorder=zo)
 
         ax.set_xticks(x_pos)
         ax.set_xticklabels(x_labels, fontsize=12)
-        ax.set_xlabel("num_states", fontsize=14)
-        if ax_idx % ncols == 0:
-            ax.set_ylabel("Test Log-Likelihood", fontsize=14)
+        if ax_idx == 0:
+            ax.set_ylabel("Test LL", fontsize=14)
         ax.grid(axis="y", alpha=0.25, linestyle="--")
         ax.grid(axis="x", alpha=0.15, linestyle=":")
 
@@ -275,18 +292,60 @@ def main():
     for i in range(n_pretrains, len(axes_flat)):
         axes_flat[i].set_visible(False)
 
-    # Per-subplot legend
-    n_legend_cols = len(all_models)
-    for ax_idx in range(n_pretrains):
-        axes_flat[ax_idx].legend(
-            fontsize=7, loc="lower right", framealpha=0.85,
-            ncol=n_legend_cols, columnspacing=0.8, handletextpad=0.3,
-            handlelength=1.5, labelspacing=0.3)
+    # ── Shared table legend (right of figure) ────────────────────
+    COL_W, COL_H = 22, 10          # swatch cell size in points
+    SEP_H, SEP_V = 4, 1
+    FONT_SZ = 8
 
-    # fig.suptitle("Test LL vs num_states\n"
-    #              "by Pre-train Model / Intention Temporal Model / Num Latents (K)",
-    #              fontsize=16, fontweight="bold", y=0.99)
-    plt.tight_layout(rect=[0, 0, 1, 0.95])
+    # Header row: blank corner cell + model-type names in fixed-width cells
+    corner = DrawingArea(COL_W, COL_H, 0, 0)          # blank corner
+    header = [corner]
+    for mt in all_models:
+        rgb = MODEL_BASE_COLORS.get(mt, (0.5, 0.5, 0.5))
+        da = DrawingArea(COL_W, COL_H, 0, 0)
+        txt = Text(COL_W / 2, COL_H / 2, MODEL_SHORT.get(mt, mt),
+                   fontsize=FONT_SZ, fontweight="bold", color=rgb,
+                   ha="center", va="center")
+        da.add_artist(txt)
+        header.append(da)
+    legend_rows = [HPacker(children=header, pad=0, sep=SEP_H, align="center")]
+
+    # One row per K value
+    for lat_idx, nl in enumerate(all_latents):
+        marker = MARKERS[lat_idx % len(MARKERS)]
+        k_da = DrawingArea(COL_W, COL_H, 0, 0)
+        k_txt = Text(COL_W / 2, COL_H / 2, f"K={nl}",
+                     fontsize=FONT_SZ, ha="center", va="center")
+        k_da.add_artist(k_txt)
+        row_items = [k_da]
+        for mt in all_models:
+            base_rgb = MODEL_BASE_COLORS.get(mt, (0.5, 0.5, 0.5))
+            c = shade_color(base_rgb, lat_idx, n_latents_levels)
+            da = DrawingArea(COL_W, COL_H, 0, 0)
+            da.add_artist(Line2D([1, COL_W - 1], [COL_H/2, COL_H/2],
+                                 color=c, linewidth=1.5))
+            da.add_artist(Line2D([COL_W/2], [COL_H/2], marker=marker,
+                                 markersize=5, color=c, linestyle="None"))
+            row_items.append(da)
+        legend_rows.append(HPacker(children=row_items, pad=0, sep=SEP_H,
+                                   align="center"))
+
+    table = VPacker(children=legend_rows, pad=3, sep=SEP_V, align="center")
+    # Attach to the last subplot, anchored outside to the right
+    last_ax = axes_flat[n_pretrains - 1]
+    box = AnchoredOffsetbox(loc="center left", child=table, pad=0.5,
+                            frameon=True, prop=dict(size=FONT_SZ),
+                            bbox_to_anchor=(1.02, 0.5),
+                            bbox_transform=last_ax.transAxes)
+    box.patch.set_boxstyle("round,pad=0.3")
+    box.patch.set_alpha(0.90)
+    box.patch.set_edgecolor("0.6")
+    last_ax.add_artist(box)
+
+    # Shared x-axis label
+    fig.text(0.45, 0.01, "num_states", ha="center", fontsize=14)
+
+    plt.tight_layout(rect=[0, 0.04, 0.88, 1.0])
 
     os.makedirs(os.path.dirname(args.save) or ".", exist_ok=True)
     plt.savefig(args.save, dpi=150, bbox_inches="tight")
