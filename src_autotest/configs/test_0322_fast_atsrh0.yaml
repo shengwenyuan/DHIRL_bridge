@@ -31,7 +31,7 @@ defaults:
   loss_threshold: 1e-3
   max_iterations: 150
   save_npy: 0
-
+  
 groups:
   States1024-Actions32:
     id: G02
@@ -278,6 +278,7 @@ groups:
       data_dir: data_autotest/dinov2_giant
       num_latents: 6
       model_type: IntentionLSTM
+  
   States1536-Actions32:
     id: G03
     description: Pre-training model types [1+3]; Intention model types [3]; Latent
@@ -523,6 +524,7 @@ groups:
       data_dir: data_autotest/dinov2_giant
       num_latents: 6
       model_type: IntentionLSTM
+  
   States2048-Actions32:
     id: G04
     description: Pre-training model types [1+3]; Intention model types [3]; Latent

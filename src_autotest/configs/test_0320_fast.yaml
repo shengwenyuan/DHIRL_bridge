@@ -37,66 +37,66 @@ groups:
     id: G01
     description: "Pre-training model types [1+3]; Intention model types [3]; Latent intention numbers [6]"
     experiments:
-      - id: E01
-        num_states: 512
-        data_dir: data_autotest/trajs
-        num_latents: 1
-        model_type: IntentionRNN
-      - id: E02
-        num_states: 512
-        data_dir: data_autotest/trajs
-        num_latents: 2
-        model_type: IntentionRNN
-      - id: E03
-        num_states: 512
-        data_dir: data_autotest/trajs
-        num_latents: 3
-        model_type: IntentionRNN
-      - id: E04
-        num_states: 512
-        data_dir: data_autotest/trajs
-        num_latents: 4
-        model_type: IntentionRNN
-      - id: E05
-        num_states: 512
-        data_dir: data_autotest/trajs
-        num_latents: 5
-        model_type: IntentionRNN
-      - id: E06
-        num_states: 512
-        data_dir: data_autotest/trajs
-        num_latents: 6
-        model_type: IntentionRNN
-      - id: E07
-        num_states: 512
-        data_dir: data_autotest/trajs
-        num_latents: 1
-        model_type: IntentionLSTM
-      - id: E08
-        num_states: 512
-        data_dir: data_autotest/trajs
-        num_latents: 2
-        model_type: IntentionLSTM
-      - id: E09
-        num_states: 512
-        data_dir: data_autotest/trajs
-        num_latents: 3
-        model_type: IntentionLSTM
-      - id: E10
-        num_states: 512
-        data_dir: data_autotest/trajs
-        num_latents: 4
-        model_type: IntentionLSTM
-      - id: E11
-        num_states: 512
-        data_dir: data_autotest/trajs
-        num_latents: 5
-        model_type: IntentionLSTM
-      - id: E12
-        num_states: 512
-        data_dir: data_autotest/trajs
-        num_latents: 6
-        model_type: IntentionLSTM
+      # - id: E01
+      #   num_states: 512
+      #   data_dir: data_autotest/trajs
+      #   num_latents: 1
+      #   model_type: IntentionRNN
+      # - id: E02
+      #   num_states: 512
+      #   data_dir: data_autotest/trajs
+      #   num_latents: 2
+      #   model_type: IntentionRNN
+      # - id: E03
+      #   num_states: 512
+      #   data_dir: data_autotest/trajs
+      #   num_latents: 3
+      #   model_type: IntentionRNN
+      # - id: E04
+      #   num_states: 512
+      #   data_dir: data_autotest/trajs
+      #   num_latents: 4
+      #   model_type: IntentionRNN
+      # - id: E05
+      #   num_states: 512
+      #   data_dir: data_autotest/trajs
+      #   num_latents: 5
+      #   model_type: IntentionRNN
+      # - id: E06
+      #   num_states: 512
+      #   data_dir: data_autotest/trajs
+      #   num_latents: 6
+      #   model_type: IntentionRNN
+      # - id: E07
+      #   num_states: 512
+      #   data_dir: data_autotest/trajs
+      #   num_latents: 1
+      #   model_type: IntentionLSTM
+      # - id: E08
+      #   num_states: 512
+      #   data_dir: data_autotest/trajs
+      #   num_latents: 2
+      #   model_type: IntentionLSTM
+      # - id: E09
+      #   num_states: 512
+      #   data_dir: data_autotest/trajs
+      #   num_latents: 3
+      #   model_type: IntentionLSTM
+      # - id: E10
+      #   num_states: 512
+      #   data_dir: data_autotest/trajs
+      #   num_latents: 4
+      #   model_type: IntentionLSTM
+      # - id: E11
+      #   num_states: 512
+      #   data_dir: data_autotest/trajs
+      #   num_latents: 5
+      #   model_type: IntentionLSTM
+      # - id: E12
+      #   num_states: 512
+      #   data_dir: data_autotest/trajs
+      #   num_latents: 6
+      #   model_type: IntentionLSTM
       - id: E13
         num_states: 512
         data_dir: data_autotest/trajs

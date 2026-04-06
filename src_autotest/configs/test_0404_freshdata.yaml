@@ -1,0 +1,47 @@
+# ──────────────────────────────────────────────────────────────
+# Usage (from DHIRL_bridge root):
+#   python -m src_autotest.run src_autotest/configs/test_0404_freshdata.yaml
+# ──────────────────────────────────────────────────────────────
+
+# We train on branch v5060, where IAVI is greatly fastened by torch.linalg.pinv
+defaults:
+  num_states: 512
+  num_actions: 32
+  data_dir: ../discretes/trajs_viz/dinov2_small
+  ll_filename: ll.csv
+  output_dir: src_autotest/outputs_freshdata
+  discount: 0.97
+  num_repeats: 1
+  num_latents: 3
+  rand_seed: 42
+  model_type: IntentionRNN
+  hidden_dim: 128
+  rnn_hidden_dim: 128
+  num_layers: 1
+  dropout: 0.2
+  nhead: 4
+  lr: 0.001
+  reg_type: l1
+  reg_weight: 0.0
+  num_epochs: 3
+  loss_threshold: 1e-3
+  max_iterations: 150
+  save_npy: 0
+
+groups:
+  fresh01:
+    id: G01
+    description: Test Dino-small using fresh right BridgeV2 data
+    experiments:
+    - id: E5
+      num_latents: 7
+    - id: E6
+      num_latents: 8
+    - id: E7
+      num_latents: 9
+    - id: E8
+      num_latents: 10
+    - id: E9
+      num_latents: 10
+      model_type: IntentionLSTM
+
