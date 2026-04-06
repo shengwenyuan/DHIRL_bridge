@@ -2,6 +2,7 @@
 __pycache__
 .vscode
 outputs
+outputs_freshdata
 logs
 data
 *.json
