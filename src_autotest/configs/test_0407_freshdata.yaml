@@ -1,9 +1,8 @@
 # ──────────────────────────────────────────────────────────────
 # Usage (from DHIRL_bridge root):
-#   python -m src_autotest.run src_autotest/configs/test_0405_freshdata.yaml
+#   python -m src_autotest.run src_autotest/configs/test_0407_freshdata.yaml
 # ──────────────────────────────────────────────────────────────
 
-# We train on branch v5060, where IAVI is greatly fastened by torch.linalg.pinv
 defaults:
   num_states: 512
   num_actions: 32
@@ -12,7 +11,7 @@ defaults:
   output_dir: src_autotest/outputs_freshdata
   discount: 0.97
   num_repeats: 1
-  num_latents: 3
+  num_latents: 5
   rand_seed: 42
   model_type: IntentionRNN
   hidden_dim: 128
@@ -30,16 +29,25 @@ defaults:
 
 groups:
   fresh01:
-    id: G00
-    description: whatever
+    id: G01
+    description: reg ablation
     experiments:
     - id: E1
-      num_latents: 3
-      model_type: IntentionRNN
+      reg_type: kl
+      kl_weight: 0.50
     - id: E2
-      num_latents: 6
-      model_type: IntentionRNN
+      reg_type: kl
+      kl_weight: 0.75
     - id: E3
-      num_latents: 9
-      model_type: IntentionRNN
+      reg_type: kl
+      kl_weight: 1.00
 
+    - id: E4
+      reg_type: l1
+      reg_weight: 0.5
+    - id: E5
+      reg_type: l1
+      reg_weight: 1.0
+    - id: E6
+      reg_type: l1
+      reg_weight: 1.5

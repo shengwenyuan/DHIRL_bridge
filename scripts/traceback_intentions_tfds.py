@@ -7,13 +7,13 @@ frames from TFDS organized by class label for human visual inspection.
 
 Usage:
     # Print class-label table for trajectories 0, 5, 10 in fold_0:
-    python scripts/traceback_byf_tfds.py \
-        --fold_dir src_autotest/outputs_freshdata/.../fold_0 \
+    python scripts/traceback_intentions_tfds.py \
+        --fold_dir src_autotest/outputs_freshdata/.../60064/fold_0 \
         --traj_indices 0 5 10
 
     # Extract frames organized by class:
-    python scripts/traceback_byf_tfds.py \
-        --fold_dir src_autotest/outputs_freshdata/.../fold_0 \
+    python scripts/traceback_intentions_tfds.py \
+        --fold_dir src_autotest/outputs_freshdata/.../60064/fold_0 \
         --traj_indices 0 5 10 --extract
 """
 

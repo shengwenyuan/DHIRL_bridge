@@ -1,6 +1,6 @@
 # ──────────────────────────────────────────────────────────────
 # Usage (from DHIRL_bridge root):
-#   python -m src_autotest.run src_autotest/configs/test_0405_freshdata.yaml
+#   python -m src_autotest.run src_autotest/configs/test_0406_freshdata.yaml
 # ──────────────────────────────────────────────────────────────
 
 # We train on branch v5060, where IAVI is greatly fastened by torch.linalg.pinv
@@ -12,7 +12,7 @@ defaults:
   output_dir: src_autotest/outputs_freshdata
   discount: 0.97
   num_repeats: 1
-  num_latents: 3
+  num_latents: 5
   rand_seed: 42
   model_type: IntentionRNN
   hidden_dim: 128
@@ -30,16 +30,48 @@ defaults:
 
 groups:
   fresh01:
-    id: G00
-    description: whatever
+    id: G01
+    description: num epochs ablation
     experiments:
     - id: E1
-      num_latents: 3
-      model_type: IntentionRNN
+      num_epochs: 1
     - id: E2
-      num_latents: 6
-      model_type: IntentionRNN
+      num_epochs: 3
     - id: E3
-      num_latents: 9
-      model_type: IntentionRNN
+      num_epochs: 5
 
+  fresh02:
+    id: G02
+    description: hidden_dim ablation
+    experiments:
+    - id: E1
+      hidden_dim: 64
+    - id: E2
+      hidden_dim: 256
+  
+  fresh03:
+    id: G03
+    description: rnn_hidden_dim ablation
+    experiments:
+    - id: E1
+      rnn_hidden_dim: 64
+    - id: E2
+      rnn_hidden_dim: 256
+
+  fresh04:
+    id: G04
+    description: num layers ablation
+    experiments:
+    - id: E1
+      num_layers: 2
+    - id: E2
+      num_layers: 3
+  
+  fresh05:
+    id: G05
+    description: max iterations ablation
+    experiments:
+    - id: E1
+      max_iterations: 100
+    - id: E2
+      max_iterations: 200
