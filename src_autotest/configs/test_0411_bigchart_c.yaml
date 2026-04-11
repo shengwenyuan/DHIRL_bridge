@@ -1,0 +1,213 @@
+# ──────────────────────────────────────────────────────────────
+# Usage (from DHIRL_bridge root):
+#   python -m src_autotest.run src_autotest/configs/test_0411_bigchart_c.yaml
+# ──────────────────────────────────────────────────────────────
+
+defaults:
+  num_states: 2048
+  num_actions: 32
+  data_dir: ../discretes/trajs_viz/dinov2_small
+
+  ll_filename: ll.csv
+  output_dir: src_autotest/outputs_freshdata
+  discount: 0.97
+  num_repeats: 1
+  num_latents: 4
+  rand_seed: 42
+
+  model_type: IntentionRNN
+  hidden_dim: 128
+  rnn_hidden_dim: 128
+  num_layers: 1
+  dropout: 0.2
+  nhead: 4
+  lr: 0.001
+
+  reg_type: l1
+  reg_weight: 0.0
+
+  num_epochs: 1
+  loss_threshold: 1e-3
+  max_iterations: 150
+  save_npy: 0
+
+groups:
+  States1024:
+    id: G01
+    description: "num_states=1024, data_dirs [2], model_types [1], num_latents [4]"
+    experiments:
+      - id: E09
+        num_states: 1024
+        data_dir: ../discretes/trajs_viz/dinov2_small
+        model_type: IntentionTransformer
+        num_latents: 2
+      - id: E10
+        num_states: 1024
+        data_dir: ../discretes/trajs_viz/dinov2_small
+        model_type: IntentionTransformer
+        num_latents: 4
+      - id: E11
+        num_states: 1024
+        data_dir: ../discretes/trajs_viz/dinov2_small
+        model_type: IntentionTransformer
+        num_latents: 6
+      - id: E12
+        num_states: 1024
+        data_dir: ../discretes/trajs_viz/dinov2_small
+        model_type: IntentionTransformer
+        num_latents: 8
+      - id: E21
+        num_states: 1024
+        data_dir: ../discretes/trajs_viz/dinov2_base
+        model_type: IntentionTransformer
+        num_latents: 2
+      - id: E22
+        num_states: 1024
+        data_dir: ../discretes/trajs_viz/dinov2_base
+        model_type: IntentionTransformer
+        num_latents: 4
+      - id: E23
+        num_states: 1024
+        data_dir: ../discretes/trajs_viz/dinov2_base
+        model_type: IntentionTransformer
+        num_latents: 6
+      - id: E24
+        num_states: 1024
+        data_dir: ../discretes/trajs_viz/dinov2_base
+        model_type: IntentionTransformer
+        num_latents: 8
+
+  States2048:
+    id: G02
+    description: "num_states=2048, data_dirs [2], model_types [1], num_latents [4]"
+    experiments:
+      - id: E09
+        num_states: 2048
+        data_dir: ../discretes/trajs_viz/dinov2_small
+        model_type: IntentionTransformer
+        num_latents: 2
+      - id: E10
+        num_states: 2048
+        data_dir: ../discretes/trajs_viz/dinov2_small
+        model_type: IntentionTransformer
+        num_latents: 4
+      - id: E11
+        num_states: 2048
+        data_dir: ../discretes/trajs_viz/dinov2_small
+        model_type: IntentionTransformer
+        num_latents: 6
+      - id: E12
+        num_states: 2048
+        data_dir: ../discretes/trajs_viz/dinov2_small
+        model_type: IntentionTransformer
+        num_latents: 8
+      - id: E21
+        num_states: 2048
+        data_dir: ../discretes/trajs_viz/dinov2_base
+        model_type: IntentionTransformer
+        num_latents: 2
+      - id: E22
+        num_states: 2048
+        data_dir: ../discretes/trajs_viz/dinov2_base
+        model_type: IntentionTransformer
+        num_latents: 4
+      - id: E23
+        num_states: 2048
+        data_dir: ../discretes/trajs_viz/dinov2_base
+        model_type: IntentionTransformer
+        num_latents: 6
+      - id: E24
+        num_states: 2048
+        data_dir: ../discretes/trajs_viz/dinov2_base
+        model_type: IntentionTransformer
+        num_latents: 8
+
+  States3072:
+    id: G03
+    description: "num_states=3072, data_dirs [2], model_types [1], num_latents [4]"
+    experiments:
+      - id: E09
+        num_states: 3072
+        data_dir: ../discretes/trajs_viz/dinov2_small
+        model_type: IntentionTransformer
+        num_latents: 2
+      - id: E10
+        num_states: 3072
+        data_dir: ../discretes/trajs_viz/dinov2_small
+        model_type: IntentionTransformer
+        num_latents: 4
+      - id: E11
+        num_states: 3072
+        data_dir: ../discretes/trajs_viz/dinov2_small
+        model_type: IntentionTransformer
+        num_latents: 6
+      - id: E12
+        num_states: 3072
+        data_dir: ../discretes/trajs_viz/dinov2_small
+        model_type: IntentionTransformer
+        num_latents: 8
+      - id: E21
+        num_states: 3072
+        data_dir: ../discretes/trajs_viz/dinov2_base
+        model_type: IntentionTransformer
+        num_latents: 2
+      - id: E22
+        num_states: 3072
+        data_dir: ../discretes/trajs_viz/dinov2_base
+        model_type: IntentionTransformer
+        num_latents: 4
+      - id: E23
+        num_states: 3072
+        data_dir: ../discretes/trajs_viz/dinov2_base
+        model_type: IntentionTransformer
+        num_latents: 6
+      - id: E24
+        num_states: 3072
+        data_dir: ../discretes/trajs_viz/dinov2_base
+        model_type: IntentionTransformer
+        num_latents: 8
+
+  States4096:
+    id: G04
+    description: "num_states=4096, data_dirs [2], model_types [1], num_latents [4]"
+    experiments:
+      - id: E09
+        num_states: 4096
+        data_dir: ../discretes/trajs_viz/dinov2_small
+        model_type: IntentionTransformer
+        num_latents: 2
+      - id: E10
+        num_states: 4096
+        data_dir: ../discretes/trajs_viz/dinov2_small
+        model_type: IntentionTransformer
+        num_latents: 4
+      - id: E11
+        num_states: 4096
+        data_dir: ../discretes/trajs_viz/dinov2_small
+        model_type: IntentionTransformer
+        num_latents: 6
+      - id: E12
+        num_states: 4096
+        data_dir: ../discretes/trajs_viz/dinov2_small
+        model_type: IntentionTransformer
+        num_latents: 8
+      - id: E21
+        num_states: 4096
+        data_dir: ../discretes/trajs_viz/dinov2_base
+        model_type: IntentionTransformer
+        num_latents: 2
+      - id: E22
+        num_states: 4096
+        data_dir: ../discretes/trajs_viz/dinov2_base
+        model_type: IntentionTransformer
+        num_latents: 4
+      - id: E23
+        num_states: 4096
+        data_dir: ../discretes/trajs_viz/dinov2_base
+        model_type: IntentionTransformer
+        num_latents: 6
+      - id: E24
+        num_states: 4096
+        data_dir: ../discretes/trajs_viz/dinov2_base
+        model_type: IntentionTransformer
+        num_latents: 8
