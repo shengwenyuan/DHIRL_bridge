@@ -25,7 +25,8 @@ import numpy as np
 from PIL import Image
 
 # ─── Configuration ──────────────────────────────────────────────────────────
-FOLD_DIR      = "src_autotest/outputs_fresh/0411_K4_noreg/fold_0"
+# FOLD_DIR      = "src_autotest/outputs_fresh/0411_K4_noreg/fold_0"
+FOLD_DIR      = "src_autotest/outputs_fresh/0411_K4_noreg/fold_0_siglip2_2048"
 TRACEBACK_DIR = os.path.join(FOLD_DIR, "traceback_output")
 K                  = 4
 THUMB              = 94           # 21 × (94+6)/300 = 7.0" — exact A4 text width
