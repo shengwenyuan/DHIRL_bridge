@@ -60,10 +60,15 @@ PRETRAIN_TITLES = {
     "trajs":        "CRL Encoder",
     "dinov2_small": "DINOv2-S",
     "dinov2_base":  "DINOv2-B",
+    "dinov2_large": "DINOv2-L",
     "dinov2_giant": "DINOv2-g",
+    "siglip2_base":  "SigLIP2-B",
+    "siglip2_large": "SigLIP2-L",
+    "siglip2_giant": "SigLIP2-g",
 }
 
-PRETRAIN_ORDER = ["trajs", "dinov2_small", "dinov2_base", "dinov2_giant"]
+PRETRAIN_ORDER = ["trajs", "dinov2_small", "dinov2_base", "dinov2_large", "dinov2_giant",
+                  "siglip2_base", "siglip2_large", "siglip2_giant"]
 MODEL_ORDER = ["IntentionRNN", "IntentionLSTM", "IntentionTransformer"]
 
 
