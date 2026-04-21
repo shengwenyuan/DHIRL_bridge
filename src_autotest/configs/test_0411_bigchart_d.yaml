@@ -58,22 +58,22 @@ groups:
         num_latents: 8
       - id: E45
         num_states: 1024
-        data_dir: ../discretes/trajs_viz/siglip_base
+        data_dir: ../discretes/trajs_viz/siglip2_base
         model_type: IntentionTransformer
         num_latents: 2
       - id: E46
         num_states: 1024
-        data_dir: ../discretes/trajs_viz/siglip_base
+        data_dir: ../discretes/trajs_viz/siglip2_base
         model_type: IntentionTransformer
         num_latents: 4
       - id: E47
         num_states: 1024
-        data_dir: ../discretes/trajs_viz/siglip_base
+        data_dir: ../discretes/trajs_viz/siglip2_base
         model_type: IntentionTransformer
         num_latents: 6
       - id: E48
         num_states: 1024
-        data_dir: ../discretes/trajs_viz/siglip_base
+        data_dir: ../discretes/trajs_viz/siglip2_base
         model_type: IntentionTransformer
         num_latents: 8
 
@@ -103,22 +103,22 @@ groups:
         num_latents: 8
       - id: E45
         num_states: 2048
-        data_dir: ../discretes/trajs_viz/siglip_base
+        data_dir: ../discretes/trajs_viz/siglip2_base
         model_type: IntentionTransformer
         num_latents: 2
       - id: E46
         num_states: 2048
-        data_dir: ../discretes/trajs_viz/siglip_base
+        data_dir: ../discretes/trajs_viz/siglip2_base
         model_type: IntentionTransformer
         num_latents: 4
       - id: E47
         num_states: 2048
-        data_dir: ../discretes/trajs_viz/siglip_base
+        data_dir: ../discretes/trajs_viz/siglip2_base
         model_type: IntentionTransformer
         num_latents: 6
       - id: E48
         num_states: 2048
-        data_dir: ../discretes/trajs_viz/siglip_base
+        data_dir: ../discretes/trajs_viz/siglip2_base
         model_type: IntentionTransformer
         num_latents: 8
 
@@ -148,22 +148,22 @@ groups:
         num_latents: 8
       - id: E45
         num_states: 3072
-        data_dir: ../discretes/trajs_viz/siglip_base
+        data_dir: ../discretes/trajs_viz/siglip2_base
         model_type: IntentionTransformer
         num_latents: 2
       - id: E46
         num_states: 3072
-        data_dir: ../discretes/trajs_viz/siglip_base
+        data_dir: ../discretes/trajs_viz/siglip2_base
         model_type: IntentionTransformer
         num_latents: 4
       - id: E47
         num_states: 3072
-        data_dir: ../discretes/trajs_viz/siglip_base
+        data_dir: ../discretes/trajs_viz/siglip2_base
         model_type: IntentionTransformer
         num_latents: 6
       - id: E48
         num_states: 3072
-        data_dir: ../discretes/trajs_viz/siglip_base
+        data_dir: ../discretes/trajs_viz/siglip2_base
         model_type: IntentionTransformer
         num_latents: 8
 
@@ -193,21 +193,21 @@ groups:
         num_latents: 8
       - id: E45
         num_states: 4096
-        data_dir: ../discretes/trajs_viz/siglip_base
+        data_dir: ../discretes/trajs_viz/siglip2_base
         model_type: IntentionTransformer
         num_latents: 2
       - id: E46
         num_states: 4096
-        data_dir: ../discretes/trajs_viz/siglip_base
+        data_dir: ../discretes/trajs_viz/siglip2_base
         model_type: IntentionTransformer
         num_latents: 4
       - id: E47
         num_states: 4096
-        data_dir: ../discretes/trajs_viz/siglip_base
+        data_dir: ../discretes/trajs_viz/siglip2_base
         model_type: IntentionTransformer
         num_latents: 6
       - id: E48
         num_states: 4096
-        data_dir: ../discretes/trajs_viz/siglip_base
+        data_dir: ../discretes/trajs_viz/siglip2_base
         model_type: IntentionTransformer
         num_latents: 8
