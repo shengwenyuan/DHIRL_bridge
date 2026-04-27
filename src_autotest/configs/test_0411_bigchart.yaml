@@ -1005,7 +1005,7 @@ groups:
         num_states: 4096
         data_dir: ../discretes/trajs_viz/siglip2_base
         model_type: IntentionTransformer
-        num_latents: 8
+        num_latents: 6
       - id: E48
         num_states: 4096
         data_dir: ../discretes/trajs_viz/siglip2_base
