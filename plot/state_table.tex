@@ -1,0 +1,38 @@
+\begin{table}[t]
+\centering
+\small
+\caption{Effect of $k$-means state granularity on trajectory discretization statistics (mean$\pm$std across trajectories).
+\textbf{Coverage}: fraction of all clusters visited per trajectory (lower = finer discretization).
+\textbf{Avg.\ revisits}: mean number of times each visited state is revisited per trajectory (higher = denser coverage).
+\textbf{Singleton}: fraction of visited states seen only once per trajectory (higher = more ``passing-through'', fewer revisits).}
+\label{tab:state_granularity}
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{llcccc}
+\hline
+\multirow{2}{*}{\textbf{Encoder}} & \multirow{2}{*}{\textbf{Metric}}
+    & \multicolumn{4}{c}{\textbf{Number of states} $|\mathcal{S}|$} \\
+\cmidrule(lr){3-6}
+    &  & 1024 & 2048 & 3072 & 4096 \\
+\hline
+% \multirow{3}{*}{CRL Encoder} & Coverage (\%) & $1.03{\scriptstyle\pm0.73}$ & $0.62{\scriptstyle\pm0.45}$ & $0.46{\scriptstyle\pm0.34}$ & $0.36{\scriptstyle\pm0.27}$ \\
+%     & Avg.\ revisits & $14.9{\scriptstyle\pm9.7}$ & $12.8{\scriptstyle\pm8.9}$ & $11.3{\scriptstyle\pm7.9}$ & $10.7{\scriptstyle\pm7.7}$ \\
+%     & Singleton (\%) & $10.7{\scriptstyle\pm14.7}$ & $12.8{\scriptstyle\pm15.1}$ & $14.6{\scriptstyle\pm15.6}$ & $15.3{\scriptstyle\pm15.5}$ \\
+% \hline
+\multirow{3}{*}{DINOv2-S} & Coverage (\%) & $0.64{\scriptstyle\pm0.40}$ & $0.37{\scriptstyle\pm0.23}$ & $0.26{\scriptstyle\pm0.17}$ & $0.21{\scriptstyle\pm0.13}$ \\
+    & Avg.\ revisits & $8.0{\scriptstyle\pm6.1}$ & $7.1{\scriptstyle\pm5.7}$ & $6.8{\scriptstyle\pm5.6}$ & $6.5{\scriptstyle\pm5.6}$ \\
+    & Singleton (\%) & $21.7{\scriptstyle\pm19.1}$ & $25.5{\scriptstyle\pm19.9}$ & $27.6{\scriptstyle\pm20.5}$ & $28.9{\scriptstyle\pm20.9}$ \\
+\hline
+\multirow{3}{*}{DINOv2-B} & Coverage (\%) & $0.69{\scriptstyle\pm0.42}$ & $0.40{\scriptstyle\pm0.25}$ & $0.28{\scriptstyle\pm0.18}$ & $0.22{\scriptstyle\pm0.14}$ \\
+    & Avg.\ revisits & $7.6{\scriptstyle\pm5.9}$ & $6.6{\scriptstyle\pm5.4}$ & $6.3{\scriptstyle\pm5.3}$ & $6.0{\scriptstyle\pm5.1}$ \\
+    & Singleton (\%) & $23.4{\scriptstyle\pm19.3}$ & $27.4{\scriptstyle\pm20.2}$ & $29.6{\scriptstyle\pm20.7}$ & $30.9{\scriptstyle\pm21.0}$ \\
+\hline
+\multirow{3}{*}{DINOv2-L} & Coverage (\%) & $0.69{\scriptstyle\pm0.42}$ & $0.40{\scriptstyle\pm0.25}$ & $0.29{\scriptstyle\pm0.18}$ & $0.23{\scriptstyle\pm0.14}$ \\
+    & Avg.\ revisits & $7.4{\scriptstyle\pm5.9}$ & $6.5{\scriptstyle\pm5.4}$ & $6.2{\scriptstyle\pm5.3}$ & $5.9{\scriptstyle\pm5.2}$ \\
+    & Singleton (\%) & $23.4{\scriptstyle\pm19.1}$ & $27.1{\scriptstyle\pm20.0}$ & $29.2{\scriptstyle\pm20.4}$ & $30.8{\scriptstyle\pm20.7}$ \\
+\hline
+\multirow{3}{*}{SigLIP2-B} & Coverage (\%) & $0.38{\scriptstyle\pm0.25}$ & $0.22{\scriptstyle\pm0.15}$ & $0.16{\scriptstyle\pm0.11}$ & $0.13{\scriptstyle\pm0.09}$ \\
+    & Avg.\ revisits & $13.3{\scriptstyle\pm9.6}$ & $11.8{\scriptstyle\pm8.9}$ & $11.0{\scriptstyle\pm8.4}$ & $10.5{\scriptstyle\pm8.1}$ \\
+    & Singleton (\%) & $14.7{\scriptstyle\pm18.5}$ & $17.5{\scriptstyle\pm19.2}$ & $19.0{\scriptstyle\pm19.6}$ & $20.0{\scriptstyle\pm19.9}$ \\
+\hline
+\end{tabular}
+\end{table}

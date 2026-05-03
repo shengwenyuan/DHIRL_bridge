@@ -29,7 +29,7 @@ import yaml
 
 
 # ── Defaults ─────────────────────────────────────────────────────
-SAVE_PATH = "plot/ll_big_linechart.png"
+SAVE_PATH = "plot/ll_big_linechart.pdf"
 
 # ── Color scales per intention temporal model ────────────────────
 MODEL_BASE_COLORS = {

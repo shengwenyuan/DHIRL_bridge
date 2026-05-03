@@ -1,0 +1,248 @@
+===== model=dinov2_large num_states=1024 =====
+Number of trajectories : 60064
+Avg traj length        : 36.55 ± 12.68
+Observed unique states : 1024 / 1024
+Observed unique actions: 32 / 32
+
+=======================================================
+  STATE statistics  (total clusters = 1024)
+=======================================================
+  Unique clusters per traj                : 7.1057 ± 4.3217
+  Coverage ratio per traj                 : 0.0069 ± 0.0042
+  Avg revisit count per traj              : 7.4154 ± 5.9209
+  Std of revisit counts per traj          : 4.9388 ± 3.5778
+  Singleton ratio per traj                : 0.2339 ± 0.1908
+
+=======================================================
+  ACTION statistics  (total clusters = 32)
+=======================================================
+  Unique clusters per traj                : 10.3955 ± 3.1582
+  Coverage ratio per traj                 : 0.3249 ± 0.0987
+  Avg revisit count per traj              : 3.6946 ± 1.4859
+  Std of revisit counts per traj          : 2.9198 ± 1.9238
+  Singleton ratio per traj                : 0.2850 ± 0.1421
+
+=======================================================
+  INTERPRETATION GUIDE
+=======================================================
+  [STATE] Coverage < 1%: discretization is very fine.
+          Consider fewer KMeans clusters.
+  [STATE] Singleton ratio < 40%: good revisit density.
+
+===== model=dinov2_large num_states=2048 =====
+Number of trajectories : 60064
+Avg traj length        : 36.55 ± 12.68
+Observed unique states : 2048 / 2048
+Observed unique actions: 32 / 32
+
+=======================================================
+  STATE statistics  (total clusters = 2048)
+=======================================================
+  Unique clusters per traj                : 8.2101 ± 5.0559
+  Coverage ratio per traj                 : 0.0040 ± 0.0025
+  Avg revisit count per traj              : 6.5186 ± 5.4053
+  Std of revisit counts per traj          : 4.5606 ± 3.3652
+  Singleton ratio per traj                : 0.2709 ± 0.1995
+
+=======================================================
+  ACTION statistics  (total clusters = 32)
+=======================================================
+  Unique clusters per traj                : 10.3955 ± 3.1580
+  Coverage ratio per traj                 : 0.3249 ± 0.0987
+  Avg revisit count per traj              : 3.6945 ± 1.4858
+  Std of revisit counts per traj          : 2.9196 ± 1.9236
+  Singleton ratio per traj                : 0.2850 ± 0.1421
+
+=======================================================
+  INTERPRETATION GUIDE
+=======================================================
+  [STATE] Coverage < 1%: discretization is very fine.
+          Consider fewer KMeans clusters.
+  [STATE] Singleton ratio < 40%: good revisit density.
+
+===== model=dinov2_large num_states=3072 =====
+Number of trajectories : 60064
+Avg traj length        : 36.55 ± 12.68
+Observed unique states : 3072 / 3072
+Observed unique actions: 32 / 32
+
+=======================================================
+  STATE statistics  (total clusters = 3072)
+=======================================================
+  Unique clusters per traj                : 8.7912 ± 5.4614
+  Coverage ratio per traj                 : 0.0029 ± 0.0018
+  Avg revisit count per traj              : 6.1760 ± 5.3021
+  Std of revisit counts per traj          : 4.3963 ± 3.3138
+  Singleton ratio per traj                : 0.2920 ± 0.2039
+
+=======================================================
+  ACTION statistics  (total clusters = 32)
+=======================================================
+  Unique clusters per traj                : 10.3956 ± 3.1578
+  Coverage ratio per traj                 : 0.3249 ± 0.0987
+  Avg revisit count per traj              : 3.6944 ± 1.4858
+  Std of revisit counts per traj          : 2.9195 ± 1.9236
+  Singleton ratio per traj                : 0.2850 ± 0.1421
+
+=======================================================
+  INTERPRETATION GUIDE
+=======================================================
+  [STATE] Coverage < 1%: discretization is very fine.
+          Consider fewer KMeans clusters.
+  [STATE] Singleton ratio < 40%: good revisit density.
+
+===== model=dinov2_large num_states=4096 =====
+Number of trajectories : 60064
+Avg traj length        : 36.55 ± 12.68
+Observed unique states : 4096 / 4096
+Observed unique actions: 32 / 32
+
+=======================================================
+  STATE statistics  (total clusters = 4096)
+=======================================================
+  Unique clusters per traj                : 9.2379 ± 5.7349
+  Coverage ratio per traj                 : 0.0023 ± 0.0014
+  Avg revisit count per traj              : 5.9129 ± 5.1764
+  Std of revisit counts per traj          : 4.2704 ± 3.2388
+  Singleton ratio per traj                : 0.3076 ± 0.2066
+
+=======================================================
+  ACTION statistics  (total clusters = 32)
+=======================================================
+  Unique clusters per traj                : 10.3957 ± 3.1581
+  Coverage ratio per traj                 : 0.3249 ± 0.0987
+  Avg revisit count per traj              : 3.6945 ± 1.4858
+  Std of revisit counts per traj          : 2.9196 ± 1.9237
+  Singleton ratio per traj                : 0.2850 ± 0.1421
+
+=======================================================
+  INTERPRETATION GUIDE
+=======================================================
+  [STATE] Coverage < 1%: discretization is very fine.
+          Consider fewer KMeans clusters.
+  [STATE] Singleton ratio < 40%: good revisit density.
+
+===== model=siglip2_base num_states=1024 =====
+Number of trajectories : 60064
+Avg traj length        : 36.55 ± 12.68
+Observed unique states : 1024 / 1024
+Observed unique actions: 32 / 32
+
+=======================================================
+  STATE statistics  (total clusters = 1024)
+=======================================================
+  Unique clusters per traj                : 3.9220 ± 2.5336
+  Coverage ratio per traj                 : 0.0038 ± 0.0025
+  Avg revisit count per traj              : 13.3260 ± 9.6223
+  Std of revisit counts per traj          : 6.5611 ± 5.1669
+  Singleton ratio per traj                : 0.1473 ± 0.1845
+
+=======================================================
+  ACTION statistics  (total clusters = 32)
+=======================================================
+  Unique clusters per traj                : 10.3958 ± 3.1581
+  Coverage ratio per traj                 : 0.3249 ± 0.0987
+  Avg revisit count per traj              : 3.6944 ± 1.4858
+  Std of revisit counts per traj          : 2.9195 ± 1.9237
+  Singleton ratio per traj                : 0.2850 ± 0.1421
+
+=======================================================
+  INTERPRETATION GUIDE
+=======================================================
+  [STATE] Coverage < 1%: discretization is very fine.
+          Consider fewer KMeans clusters.
+  [STATE] Singleton ratio < 40%: good revisit density.
+
+===== model=siglip2_base num_states=2048 =====
+Number of trajectories : 60064
+Avg traj length        : 36.55 ± 12.68
+Observed unique states : 2048 / 2048
+Observed unique actions: 32 / 32
+
+=======================================================
+  STATE statistics  (total clusters = 2048)
+=======================================================
+  Unique clusters per traj                : 4.6058 ± 3.0575
+  Coverage ratio per traj                 : 0.0022 ± 0.0015
+  Avg revisit count per traj              : 11.7536 ± 8.9401
+  Std of revisit counts per traj          : 6.2629 ± 4.7677
+  Singleton ratio per traj                : 0.1749 ± 0.1923
+
+=======================================================
+  ACTION statistics  (total clusters = 32)
+=======================================================
+  Unique clusters per traj                : 10.3956 ± 3.1581
+  Coverage ratio per traj                 : 0.3249 ± 0.0987
+  Avg revisit count per traj              : 3.6945 ± 1.4858
+  Std of revisit counts per traj          : 2.9196 ± 1.9237
+  Singleton ratio per traj                : 0.2850 ± 0.1421
+
+=======================================================
+  INTERPRETATION GUIDE
+=======================================================
+  [STATE] Coverage < 1%: discretization is very fine.
+          Consider fewer KMeans clusters.
+  [STATE] Singleton ratio < 40%: good revisit density.
+
+===== model=siglip2_base num_states=3072 =====
+Number of trajectories : 60064
+Avg traj length        : 36.55 ± 12.68
+Observed unique states : 3072 / 3072
+Observed unique actions: 32 / 32
+
+=======================================================
+  STATE statistics  (total clusters = 3072)
+=======================================================
+  Unique clusters per traj                : 4.9813 ± 3.3637
+  Coverage ratio per traj                 : 0.0016 ± 0.0011
+  Avg revisit count per traj              : 10.9743 ± 8.4091
+  Std of revisit counts per traj          : 6.1240 ± 4.5255
+  Singleton ratio per traj                : 0.1900 ± 0.1964
+
+=======================================================
+  ACTION statistics  (total clusters = 32)
+=======================================================
+  Unique clusters per traj                : 10.3953 ± 3.1581
+  Coverage ratio per traj                 : 0.3249 ± 0.0987
+  Avg revisit count per traj              : 3.6946 ± 1.4858
+  Std of revisit counts per traj          : 2.9198 ± 1.9238
+  Singleton ratio per traj                : 0.2850 ± 0.1421
+
+=======================================================
+  INTERPRETATION GUIDE
+=======================================================
+  [STATE] Coverage < 1%: discretization is very fine.
+          Consider fewer KMeans clusters.
+  [STATE] Singleton ratio < 40%: good revisit density.
+
+===== model=siglip2_base num_states=4096 =====
+Number of trajectories : 60064
+Avg traj length        : 36.55 ± 12.68
+Observed unique states : 4096 / 4096
+Observed unique actions: 32 / 32
+
+=======================================================
+  STATE statistics  (total clusters = 4096)
+=======================================================
+  Unique clusters per traj                : 5.1990 ± 3.5011
+  Coverage ratio per traj                 : 0.0013 ± 0.0009
+  Avg revisit count per traj              : 10.5477 ± 8.1008
+  Std of revisit counts per traj          : 6.0264 ± 4.3978
+  Singleton ratio per traj                : 0.1998 ± 0.1985
+
+=======================================================
+  ACTION statistics  (total clusters = 32)
+=======================================================
+  Unique clusters per traj                : 10.3955 ± 3.1581
+  Coverage ratio per traj                 : 0.3249 ± 0.0987
+  Avg revisit count per traj              : 3.6945 ± 1.4859
+  Std of revisit counts per traj          : 2.9198 ± 1.9238
+  Singleton ratio per traj                : 0.2850 ± 0.1421
+
+=======================================================
+  INTERPRETATION GUIDE
+=======================================================
+  [STATE] Coverage < 1%: discretization is very fine.
+          Consider fewer KMeans clusters.
+  [STATE] Singleton ratio < 40%: good revisit density.
+
