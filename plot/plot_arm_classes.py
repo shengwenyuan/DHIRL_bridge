@@ -25,14 +25,14 @@ import numpy as np
 from PIL import Image
 
 # ─── Configuration ──────────────────────────────────────────────────────────
-FOLD_DIR      = "src_autotest/outputs_fresh/0411_K4_noreg/fold_0_dino_2048"
-# FOLD_DIR      = "src_autotest/outputs_fresh/0411_K4_noreg/fold_0_siglip2_2048"
+# FOLD_DIR      = "src_autotest/outputs_fresh/0411_K4_noreg/fold_0_dino_2048"
+FOLD_DIR      = "src_autotest/outputs_fresh/0411_K4_noreg/fold_0_siglip2_2048"
 TRACEBACK_DIR = os.path.join(FOLD_DIR, "traceback_output")
 K                  = 4
 THUMB              = 94           # 21 × (94+6)/300 = 7.0" — exact A4 text width
 MAX_FRAMES_PER_ROW = 21           # longest traj (51 frames) → 3 rows of ≤21
 LAYOUT             = "horizontal" # "horizontal" | "vertical"
-OUT                = "plot/arm_classes.pdf"
+OUT                = "plot/arm_classes_lush_siglip2.pdf"
 DPI                = 300          # print-quality; THUMB ≤ 256 avoids upsampling
 
 # Ordered list of traj folder names to plot; None → all folders in TRACEBACK_DIR.
@@ -40,16 +40,16 @@ SELECTED = [
     # "traj_00000_idx7",        # Move the blue fork to the lower right burner
     # "traj_00006_idx33",       # (no language — scripted)
     "traj_00123_idx610",        # 1 place the pot lid next to the cloth
-    # "traj_00201_idx1013",       # 1 placed the green cube to the top of the yellow cube
+    "traj_00201_idx1013",       # 1 placed the green cube to the top of the yellow cube
     "traj_00225_idx1131",       # 1 put pan in sink
     # "traj_00400_idx1946",     # Move the green cloth to the back middle of the table
-    # "traj_00470_idx2265",       # 1 unfold the cloth from bottom right to top left
-    # "traj_00560_idx2747",       # 1 move the red pot to the left side of the sink
+    "traj_00470_idx2265",       # 1 unfold the cloth from bottom right to top left
+    "traj_00560_idx2747",       # 1 move the red pot to the left side of the sink
     # "traj_00600_idx2921",     # moved the banana to the upper middle of the table
-    # "traj_00633_idx3044",     # fold the cloth from right to center
+    "traj_00633_idx3044",     # fold the cloth from right to center
     # "traj_00666_idx3205",     # sweep into pile
     # "traj_00712_idx3408",     # move the blue cloth on the lower side of the left stove
-    # "traj_00855_idx4070",     # move the yellow napkin to upper right of the table
+    "traj_00855_idx4070",     # move the yellow napkin to upper right of the table
     "traj_00913_idx4465",       # 1 Took and laundered in the washing machine
     "traj_00966_idx4680",       # 1 Move the pot from the front right to the back right corner.
 ]
@@ -267,7 +267,7 @@ def main():
         ax.set_axis_off()
 
         lang = (traj["language"] or "(no instruction)").strip()
-        ax.set_title(lang, fontsize=8, loc="left", pad=3)
+        ax.set_title(lang, fontsize=10, loc="left", pad=1)
 
     legend_patches = [
         mpatches.Patch(color=CLASS_COLORS[k], label=CLASS_NAMES[k])

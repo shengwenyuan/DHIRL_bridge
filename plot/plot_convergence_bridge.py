@@ -34,12 +34,12 @@ from matplotlib.lines import Line2D
 matplotlib.rcParams.update({
     'font.family':     'sans-serif',
     'font.sans-serif': ['DejaVu Sans'],
-    'font.size':        9,
-    'axes.labelsize':  10,
-    'axes.titlesize':   9,
-    'xtick.labelsize': 10,
-    'ytick.labelsize': 10,
-    'legend.fontsize':  9,
+    'font.size':        12,
+    'axes.labelsize':  13,
+    'axes.titlesize':   12,
+    'xtick.labelsize': 13,
+    'ytick.labelsize': 13,
+    'legend.fontsize':   9,
 })
 
 
@@ -47,16 +47,6 @@ matplotlib.rcParams.update({
 BLUE         = (0.20, 0.45, 0.85)
 GRAY_THRESH  = (0.50, 0.50, 0.50)
 
-# One accent color per seed (cycles if more seeds than colors)
-SEED_COLORS = [
-    (0.20, 0.45, 0.85),   # seed 0 – blue  (matches IntentionRNN style)
-    (0.85, 0.35, 0.10),   # seed 1 – orange
-    (0.15, 0.62, 0.35),   # seed 2 – green
-    (0.65, 0.18, 0.58),   # seed 3 – purple
-    (0.60, 0.52, 0.08),   # seed 4 – olive
-]
-
-SEED_LINE_ALPHA  = 0.45   # per-seed mean curve
 BAND_ALPHA       = 0.15   # grand std band fill
 GRAND_MEAN_ALPHA = 0.95
 
@@ -125,16 +115,10 @@ def plot(all_runs_per_seed, out_path, loss_threshold=1e-3):
                     for r in seed_runs)
     grid      = np.arange(4, max_iter + 1, 4)
 
-    # ---------- compute per-seed mean curves and grand statistics ----------
-    seed_means = []          # (n_seeds, len(grid)) in log space
-    all_log_mats = []        # flattened across seeds
-
+    # ---------- grand statistics ----------
+    all_log_mats = []
     for seed_runs in all_runs_per_seed:
-        lmat = runs_to_logmat(seed_runs, grid)   # (n_folds, len(grid))
-        seed_means.append(lmat.mean(axis=0))
-        all_log_mats.append(lmat)
-
-    seed_means   = np.array(seed_means)                   # (n_seeds, len(grid))
+        all_log_mats.append(runs_to_logmat(seed_runs, grid))
     all_log_flat = np.vstack(all_log_mats)                # (n_seeds*n_folds, len(grid))
 
     grand_mean = all_log_flat.mean(axis=0)
@@ -142,14 +126,6 @@ def plot(all_runs_per_seed, out_path, loss_threshold=1e-3):
 
     # ---------- figure --------------------------------------------------
     fig, ax = plt.subplots(figsize=(5.2, 3.6))
-
-    # Per-seed mean curves (only drawn when there are multiple seeds)
-    if n_seeds > 1:
-        for s_idx, s_mean_log in enumerate(seed_means):
-            c = SEED_COLORS[s_idx % len(SEED_COLORS)]
-            ax.semilogy(grid, np.exp(s_mean_log),
-                        color=c, linewidth=1.2, alpha=SEED_LINE_ALPHA,
-                        zorder=3)
 
     # Grand mean ± std band
     grand_lin = np.exp(grand_mean)
@@ -168,26 +144,22 @@ def plot(all_runs_per_seed, out_path, loss_threshold=1e-3):
     # Axes
     ax.set_xlim(left=0, right=max_iter + 4)
     ax.set_xlabel("EM iteration")
-    ax.set_ylabel("EM objective (loss)")
+    ax.set_ylabel("Loss")
     ax.yaxis.set_major_formatter(mticker.LogFormatterSciNotation())
     ax.grid(axis="y", which="both", alpha=0.20, linestyle="--")
     ax.grid(axis="x", alpha=0.12, linestyle=":")
 
     # Legend
+    n_folds = len(all_runs_per_seed[0])
+    label = ("mean ± std" +
+             (f" ({n_seeds} seeds × {n_folds} folds)"
+              if n_seeds > 1 else f" ({n_folds} folds)"))
     handles = [
         Line2D([0], [0], color=BLUE, linewidth=2.2,
-               alpha=GRAND_MEAN_ALPHA,
-               label="mean ± std" + (f" ({n_seeds} seeds × {len(all_runs_per_seed[0])} folds)"
-                                     if n_seeds > 1 else
-                                     f" ({len(all_runs_per_seed[0])} folds)")),
-    ]
-    if n_seeds > 1:
-        handles.append(
-            Line2D([0], [0], color=GRAY_THRESH, linewidth=1.2,
-                   alpha=SEED_LINE_ALPHA, label="per-seed mean"))
-    handles.append(
+               alpha=GRAND_MEAN_ALPHA, label=label),
         Line2D([0], [0], color=GRAY_THRESH, linewidth=0.9, linestyle="--",
-               label=f"conv. threshold (1e{int(np.log10(loss_threshold))})"))
+               label=f"conv. threshold (1e{int(np.log10(loss_threshold))})"),
+    ]
     ax.legend(handles=handles, loc="upper right",
               framealpha=0.85, edgecolor="0.7")
 

@@ -10,7 +10,7 @@ Usage (from DHIRL_bridge root):
 
     # Single-source shorthand (backward-compatible):
     python plot/plot_ll_big_linechart.py \
-        --src src_autotest/configs/test_0320_fast.yaml src_autotest/outputs/20260322_060204
+        python plot/plot_ll_big_linechart.py --src src_autotest/configs/test_0411_bigchart.yaml src_autotest/outputs_fresh/bigchart_0416
 """
 
 import argparse
@@ -248,7 +248,7 @@ def main():
     for ax_idx, pretrain in enumerate(all_pretrains):
         ax = axes_flat[ax_idx]
         ax.set_title(PRETRAIN_TITLES.get(pretrain, f"Pre-train: {pretrain}"),
-                     fontsize=14)
+                     fontsize=17)
 
         for model_type in reversed(all_models):   # draw least-important first
             base_rgb = MODEL_BASE_COLORS.get(model_type, (0.5, 0.5, 0.5))
@@ -287,9 +287,9 @@ def main():
                                 color=color, alpha=0.10 * alph, zorder=zo)
 
         ax.set_xticks(x_pos)
-        ax.set_xticklabels(x_labels, fontsize=12)
+        ax.set_xticklabels(x_labels, fontsize=15)
         if ax_idx == 0:
-            ax.set_ylabel("Test LL", fontsize=14)
+            ax.set_ylabel("Test LL", fontsize=17)
         ax.grid(axis="y", alpha=0.25, linestyle="--")
         ax.grid(axis="x", alpha=0.15, linestyle=":")
 
@@ -299,8 +299,8 @@ def main():
 
     # ── Shared table legend (right of figure) ────────────────────
     COL_W, COL_H = 22, 10          # swatch cell size in points
-    SEP_H, SEP_V = 4, 1
-    FONT_SZ = 8
+    SEP_H, SEP_V = 3, 1
+    FONT_SZ = 10
 
     # Header row: blank corner cell + model-type names in fixed-width cells
     corner = DrawingArea(COL_W, COL_H, 0, 0)          # blank corner
@@ -335,22 +335,22 @@ def main():
         legend_rows.append(HPacker(children=row_items, pad=0, sep=SEP_H,
                                    align="center"))
 
-    table = VPacker(children=legend_rows, pad=3, sep=SEP_V, align="center")
-    # Attach to the last subplot, anchored outside to the right
+    table = VPacker(children=legend_rows, pad=1, sep=SEP_V, align="center")
+    # Place legend inside last subplot, lower-right corner anchored near (right, -1.6)
     last_ax = axes_flat[n_pretrains - 1]
-    box = AnchoredOffsetbox(loc="center left", child=table, pad=0.5,
+    box = AnchoredOffsetbox(loc="lower right", child=table, pad=0.2,
                             frameon=True, prop=dict(size=FONT_SZ),
-                            bbox_to_anchor=(1.02, 0.5),
-                            bbox_transform=last_ax.transAxes)
-    box.patch.set_boxstyle("round,pad=0.3")
+                            bbox_to_anchor=(x_pos[-1], -1.8),
+                            bbox_transform=last_ax.transData)
+    box.patch.set_boxstyle("round,pad=0.2")
     box.patch.set_alpha(0.90)
     box.patch.set_edgecolor("0.6")
     last_ax.add_artist(box)
 
     # Shared x-axis label
-    fig.text(0.45, 0.01, "num_states", ha="center", fontsize=14)
+    fig.text(0.45, 0.01, "num_states", ha="center", fontsize=17)
 
-    plt.tight_layout(rect=[0, 0.04, 0.88, 1.0])
+    plt.tight_layout(rect=[0, 0.04, 1.0, 1.0])
 
     os.makedirs(os.path.dirname(args.save) or ".", exist_ok=True)
     plt.savefig(args.save, dpi=150, bbox_inches="tight")
