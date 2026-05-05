@@ -1,0 +1,81 @@
+# ──────────────────────────────────────────────────────────────
+# Data efficiency sweep config for bridgeV2 (DHIRL_bridge)
+#
+# Usage (from DHIRL_bridge root):
+#   python -m src_autotest.run_sweep src_autotest/configs/data_efficiency.yaml
+#   python -m src_autotest.run_sweep src_autotest/configs/data_efficiency.yaml --groups RNN_efficiency
+#   python -m src_autotest.run_sweep src_autotest/configs/data_efficiency.yaml --max_parallel 4
+#
+# num_traj_steps=5 sweeps: [20%, 40%, 60%, 80%, 100%] of the dataset
+# ──────────────────────────────────────────────────────────────
+
+defaults:
+  num_states: 2048
+  num_actions: 32
+  data_dir: ../discretes/trajs_viz/dinov2_small
+
+  ll_filename: ll.csv
+  output_dir: src_autotest/outputs_freshdata
+  discount: 0.97
+  num_repeats: 2
+  num_latents: 4
+  rand_seed: 42
+  num_traj_steps: 5
+
+  model_type: IntentionRNN
+  hidden_dim: 128
+  rnn_hidden_dim: 128
+  num_layers: 1
+  dropout: 0.2
+  nhead: 4
+  lr: 0.001
+
+  reg_type: l1
+  reg_weight: 0.0
+
+  num_epochs: 1
+  loss_threshold: 1e-3
+  max_iterations: 150
+  save_npy: 0
+
+
+groups:
+
+  RNN_efficiency:
+    id: G01
+    description: "Data efficiency curve — IntentionRNN, bridgeV2 2048x32"
+    experiments:
+      - id: E01
+        rand_seed: 42
+      - id: E02
+        rand_seed: 1223
+      - id: E03
+        rand_seed: 999
+
+  LSTM_efficiency:
+    id: G02
+    description: "Data efficiency curve — IntentionLSTM, bridgeV2 2048x32"
+    experiments:
+      - id: E01
+        model_type: IntentionLSTM
+        rand_seed: 42
+      - id: E02
+        model_type: IntentionLSTM
+        rand_seed: 1223
+      - id: E03
+        model_type: IntentionLSTM
+        rand_seed: 999
+
+  Transformer_efficiency:
+    id: G03
+    description: "Data efficiency curve — IntentionTransformer, bridgeV2 2048x32"
+    experiments:
+      - id: E01
+        model_type: IntentionTransformer
+        rand_seed: 42
+      - id: E02
+        model_type: IntentionTransformer
+        rand_seed: 1223
+      - id: E03
+        model_type: IntentionTransformer
+        rand_seed: 999
