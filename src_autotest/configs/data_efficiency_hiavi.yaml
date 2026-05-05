@@ -1,0 +1,39 @@
+# ──────────────────────────────────────────────────────────────
+# HIAVI data efficiency sweep for bridgeV2 (DHIRL_bridge)
+#
+# Usage (from DHIRL_bridge root):
+#   python -m src_autotest.run_sweep src_autotest/configs/data_efficiency_hiavi.yaml
+#   python -m src_autotest.run_sweep src_autotest/configs/data_efficiency_hiavi.yaml --max_parallel 4
+#
+# total=60064, 20%=12012 already saturates PGIAVI — start HIAVI here first
+# ──────────────────────────────────────────────────────────────
+
+defaults:
+  train_module: src_autotest.train_bridge_hiavi_sweep
+
+  num_states: 2048
+  num_actions: 32
+  data_dir: ../discretes/trajs_viz/dinov2_small
+
+  ll_filename: ll.csv
+  output_dir: src_autotest/outputs_freshdata
+  discount: 0.97
+  num_repeats: 1
+  num_latents: 4
+  rand_seed: 42
+  num_trajs_list: "12012, 24024"
+  save_npy: 0
+
+
+groups:
+
+  HIAVI_probe:
+    id: G01
+    description: "HIAVI at 20% and 40% data — probe run"
+    experiments:
+      - id: E01
+        rand_seed: 42
+      - id: E02
+        rand_seed: 1223
+      - id: E03
+        rand_seed: 999

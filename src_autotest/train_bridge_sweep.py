@@ -48,6 +48,8 @@ if __name__ == '__main__':
 
     parser.add_argument('--num_traj_steps', type=int, default=5,
                         help='Number of evenly spaced num_trajs values for data efficiency sweep')
+    parser.add_argument('--num_trajs_list', type=str, default=None,
+                        help='Comma-separated explicit num_trajs values (overrides num_traj_steps)')
 
     args = parser.parse_args()
 
@@ -84,7 +86,10 @@ if __name__ == '__main__':
 
     len_trajs = len(trajs)
     kf = KFold(n_splits=num_folds, shuffle=True, random_state=10042)
-    traj_steps = [len_trajs * i // args.num_traj_steps for i in range(1, args.num_traj_steps + 1)]
+    if args.num_trajs_list is not None:
+        traj_steps = [int(x) for x in args.num_trajs_list.split(',')]
+    else:
+        traj_steps = [len_trajs * i // args.num_traj_steps for i in range(1, args.num_traj_steps + 1)]
     for num_trajs in traj_steps:
         for kf_idx, (train_idxes, test_idxes) in enumerate(kf.split(trajs[:num_trajs])):
             train_trajs = [trajs[train_idx] for train_idx in train_idxes]

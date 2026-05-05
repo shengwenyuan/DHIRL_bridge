@@ -437,5 +437,126 @@ class PGIAVI:
             fs.append(f_i)
             lls.append(np.mean(logsumexp(log_joint_i, axis=-1)))
         lls = np.mean(np.hstack(lls))
-        
+
         return np.mean(lls), fs
+
+
+class HIAVI_B:
+    """HMM-IAVI: Baum-Welch EM over per-timestep latent states. M-step uses IAVI_B (GPU)."""
+
+    def __init__(self, num_latents, num_states, num_actions, P, train_trajs, test_trajs, discount):
+        self.num_latents = num_latents
+        self.num_states = num_states
+        self.num_actions = num_actions
+        self.P = P
+        self.discount = discount
+        self.train_trajs = train_trajs
+        self.test_trajs = test_trajs
+
+    def _get_mc_probs(self, pis, trajs, logp_init, logp_tr):
+        """Forward-backward over latent HMM states. Returns per-traj (gammas, xis, lls)."""
+        num_latents = logp_init.shape[0]
+        logp_gammas = []
+        logp_xis = []
+        lls = []
+        for traj in trajs:
+            logp_obs = np.array([
+                [np.log(pis[l][s, a]) for l in range(num_latents)]
+                for s, a, ns in traj
+            ])  # (T, K)
+
+            logp_alpha_prev = logp_init + logp_obs[0]
+            logp_alpha = [logp_alpha_prev]
+            for lpo in logp_obs[1:]:
+                logp_alpha_prev = logsumexp(logp_alpha_prev + logp_tr.T, axis=-1)
+                logp_alpha_prev += lpo
+                logp_alpha.append(logp_alpha_prev)
+
+            logp_beta_next = np.log(np.ones(num_latents))
+            logp_beta = [logp_beta_next]
+            for lpo in reversed(logp_obs[1:]):
+                logp_beta_next += lpo
+                logp_beta_next = logsumexp(logp_beta_next + logp_tr, axis=-1)
+                logp_beta.append(logp_beta_next)
+
+            logp_alpha = np.array(logp_alpha)
+            logp_beta = np.array(logp_beta[::-1])
+
+            logp_gamma = logp_alpha + logp_beta
+            logp_gamma -= logsumexp(logp_gamma, axis=-1, keepdims=True)
+
+            logp_xi = []
+            for t, lpa in enumerate(logp_alpha[:-1]):
+                lpx = lpa[:, np.newaxis] + logp_tr + logp_beta[t + 1] + logp_obs[t + 1]
+                lpx -= logsumexp(lpx)
+                logp_xi.append(lpx)
+            logp_xi = np.array(logp_xi)  # (T-1, K, K)
+
+            lls.append(logsumexp(logp_gamma + logp_obs, axis=-1))  # (T,)
+            logp_gammas.append(logp_gamma)
+            logp_xis.append(logp_xi)
+
+        return logp_gammas, logp_xis, lls
+
+    def fit(self):
+        p_init = np.abs(np.random.randn(self.num_latents))
+        p_init /= p_init.sum()
+        p_tr = 0.95 * np.identity(self.num_latents)
+        p_tr += np.abs(np.random.normal(0, 0.05, (self.num_latents, self.num_latents)))
+        p_tr /= p_tr.sum(axis=-1, keepdims=True)
+        logp_init = np.log(p_init)
+        logp_tr = np.log(p_tr)
+
+        pis = []
+        for _ in range(self.num_latents):
+            pi = np.abs(np.random.randn(self.num_states, self.num_actions))
+            pi /= pi.sum(axis=-1, keepdims=True)
+            pis.append(pi)
+        logp_gammas, *_ = self._get_mc_probs(pis, self.train_trajs, logp_init, logp_tr)
+
+        while True:
+            z_hat = np.argmax(np.vstack(logp_gammas), axis=-1)
+
+            pis = []
+            agents = []
+            for latent_idx in range(self.num_latents):
+                # Stochastic soft assignment of timesteps to this latent
+                inputs = []
+                for traj_idx, traj in enumerate(self.train_trajs):
+                    logp_gamma = logp_gammas[traj_idx]  # (T, K)
+                    for t, step in enumerate(traj):
+                        if np.random.uniform() > np.exp(logp_gamma[t, latent_idx]):
+                            continue
+                        inputs.append(step)  # step = [s, a, ns]
+
+                expert_pi = np.zeros((self.num_states, self.num_actions))
+                for s, a, ns in inputs:
+                    expert_pi[s, a] += 1
+                expert_pi[expert_pi.sum(axis=1) == 0] = 1e-6
+                expert_pi /= expert_pi.sum(axis=1, keepdims=True)
+
+                agent = IAVI_B(num_states=self.num_states, num_actions=self.num_actions,
+                               P=self.P, expert_policy=expert_pi, discount=self.discount)
+                agent.train()
+                agents.append(agent)
+                pis.append(agent.get_policy())  # numpy (S, A)
+
+            logp_gammas, logp_xis, _ = self._get_mc_probs(pis, self.train_trajs, logp_init, logp_tr)
+
+            logp_init = logsumexp([lg[0] for lg in logp_gammas], b=1 / len(logp_gammas), axis=0)
+            logp_tr = logsumexp(np.concatenate(logp_xis), axis=0)
+            logp_tr -= logsumexp(
+                np.concatenate([lg[:-1] for lg in logp_gammas]), axis=0, keepdims=True
+            ).T
+            logp_tr -= logsumexp(logp_tr, axis=-1, keepdims=True)
+
+            if (z_hat == np.argmax(np.vstack(logp_gammas), axis=-1)).all():
+                break
+
+        ll = {}
+        for ds in ['train', 'test']:
+            trajs = self.train_trajs if ds == 'train' else self.test_trajs
+            *_, lls = self._get_mc_probs(pis, trajs, logp_init, logp_tr)
+            ll[ds] = float(np.mean(np.hstack(lls)))
+
+        return ll, logp_init, logp_tr, agents

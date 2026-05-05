@@ -28,6 +28,7 @@ PARAM_KEYS = [
     'num_epochs', 'loss_threshold', 'max_iterations',
     'save_npy',
     'num_traj_steps',
+    'num_trajs_list',
 ]
 
 
@@ -36,8 +37,8 @@ def load_config(path):
         return yaml.safe_load(f)
 
 
-def build_command(params):
-    cmd = [sys.executable, '-m', TRAIN_MODULE]
+def build_command(params, train_module=TRAIN_MODULE):
+    cmd = [sys.executable, '-m', train_module]
     for key in PARAM_KEYS:
         if key in params:
             cmd += [f'--{key}', str(params[key])]
@@ -90,6 +91,7 @@ def main():
 
     cfg = load_config(args.config)
     defaults = cfg.get('defaults', {})
+    train_module = defaults.pop('train_module', TRAIN_MODULE)
     groups = cfg.get('groups', {})
 
     if args.groups:
@@ -126,7 +128,7 @@ def main():
                 params['output_dir'] = os.path.join(params['output_dir'], timestamp)
 
             label = label_from_overrides(exp, defaults)
-            cmd = build_command(params)
+            cmd = build_command(params, train_module)
             log_path = os.path.join(group_log_dir, f'{eid}.log')
             tag = f'{gid}/{eid}'
             all_jobs.append((cmd, log_path, gid, label, tag))

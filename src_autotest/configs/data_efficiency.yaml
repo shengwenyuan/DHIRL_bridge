@@ -6,7 +6,7 @@
 #   python -m src_autotest.run_sweep src_autotest/configs/data_efficiency.yaml --groups RNN_efficiency
 #   python -m src_autotest.run_sweep src_autotest/configs/data_efficiency.yaml --max_parallel 4
 #
-# num_traj_steps=5 sweeps: [20%, 40%, 60%, 80%, 100%] of the dataset
+# num_trajs_list: manual steps focused on the low-data regime (total=60064, 20%=12012)
 # ──────────────────────────────────────────────────────────────
 
 defaults:
@@ -20,7 +20,7 @@ defaults:
   num_repeats: 2
   num_latents: 4
   rand_seed: 42
-  num_traj_steps: 5
+  num_trajs_list: "1000,2000,4000,6000,8000,10000,12012"
 
   model_type: IntentionRNN
   hidden_dim: 128
