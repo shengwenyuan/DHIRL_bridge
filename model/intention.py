@@ -4,6 +4,33 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn.utils.rnn import pad_sequence, pack_padded_sequence, pad_packed_sequence
 
+
+GATE_MODES = ('retrospective', 'causal', 'state_only')
+
+
+def _validate_gate_mode(gate_mode):
+    if gate_mode not in GATE_MODES:
+        raise ValueError(f'Unknown gate_mode={gate_mode!r}; expected one of {GATE_MODES}')
+
+
+def _combine_gate_inputs(state_embeds, action_embeds, gate_mode):
+    if gate_mode == 'retrospective':
+        return state_embeds + action_embeds
+    if gate_mode == 'state_only':
+        return state_embeds
+
+    previous_action_embeds = torch.zeros_like(action_embeds)
+    previous_action_embeds[:, 1:, :] = action_embeds[:, :-1, :]
+    return state_embeds + previous_action_embeds
+
+
+def _causal_attention_mask(sequence_length, device):
+    return torch.triu(
+        torch.ones(sequence_length, sequence_length, dtype=torch.bool, device=device),
+        diagonal=1,
+    )
+
+
 class IntentionNet(nn.Module):
     def __init__(self, phi_dim, num_latents, hidden_dim=128):
         super(IntentionNet, self).__init__()
@@ -19,10 +46,12 @@ class IntentionNet(nn.Module):
 
 
 class IntentionRNN(nn.Module):
-    def __init__(self, num_states, num_actions, num_latents, hidden_dim=128, rnn_hidden_dim=128, num_layers=1, dropout=0.1):
+    def __init__(self, num_states, num_actions, num_latents, hidden_dim=128, rnn_hidden_dim=128, num_layers=1, dropout=0.1, gate_mode='retrospective'):
         super(IntentionRNN, self).__init__()
+        _validate_gate_mode(gate_mode)
         self.rnn_hidden_dim = rnn_hidden_dim
         self.num_layers = num_layers
+        self.gate_mode = gate_mode
 
         self.state_embed = nn.Embedding(num_states, hidden_dim)
         self.action_embed = nn.Embedding(num_actions, hidden_dim)
@@ -40,7 +69,7 @@ class IntentionRNN(nn.Module):
     def forward(self, bs, ba, mask=None, total_length=None):
         state_embeds = self.state_embed(bs)   # (B, T, hidden_dim)
         action_embeds = self.action_embed(ba) # (B, T, hidden_dim)
-        x = state_embeds + action_embeds       # (B, T, hidden_dim)
+        x = _combine_gate_inputs(state_embeds, action_embeds, self.gate_mode)
         if mask is not None:
             lengths = mask.sum(dim=1)
             x_packed = pack_padded_sequence(x, lengths.cpu(), batch_first=True, enforce_sorted=False)
@@ -54,10 +83,12 @@ class IntentionRNN(nn.Module):
 
 
 class IntentionLSTM(nn.Module):
-    def __init__(self, num_states, num_actions, num_latents, hidden_dim=128, rnn_hidden_dim=128, num_layers=1, dropout=0.1):
+    def __init__(self, num_states, num_actions, num_latents, hidden_dim=128, rnn_hidden_dim=128, num_layers=1, dropout=0.1, gate_mode='retrospective'):
         super(IntentionLSTM, self).__init__()
+        _validate_gate_mode(gate_mode)
         self.rnn_hidden_dim = rnn_hidden_dim
         self.num_layers = num_layers
+        self.gate_mode = gate_mode
 
         self.state_embed = nn.Embedding(num_states, hidden_dim)
         self.action_embed = nn.Embedding(num_actions, hidden_dim)
@@ -75,7 +106,7 @@ class IntentionLSTM(nn.Module):
     def forward(self, bs, ba, mask=None, total_length=None):
         state_embeds = self.state_embed(bs)   # (B, T, hidden_dim)
         action_embeds = self.action_embed(ba) # (B, T, hidden_dim)
-        x = state_embeds + action_embeds       # (B, T, hidden_dim)
+        x = _combine_gate_inputs(state_embeds, action_embeds, self.gate_mode)
         if mask is not None:
             lengths = mask.sum(dim=1)
             x_packed = pack_padded_sequence(x, lengths.cpu(), batch_first=True, enforce_sorted=False)
@@ -96,8 +127,11 @@ class IntentionTransformer(nn.Module):
                  d_model=128,
                  nhead=4,
                  num_layers=2,
-                 dropout=0.1):
+                 dropout=0.1,
+                 gate_mode='retrospective'):
         super().__init__()
+        _validate_gate_mode(gate_mode)
+        self.gate_mode = gate_mode
         self.state_embed = nn.Embedding(num_states, d_model)
         self.action_embed = nn.Embedding(num_actions, d_model)
         self.pos_encoding = PositionalEncoding(d_model, dropout)
@@ -109,13 +143,16 @@ class IntentionTransformer(nn.Module):
         # bs: (B, T), ba: (B, T)
         state_embeds = self.state_embed(bs)   # (B, T, d_model)
         action_embeds = self.action_embed(ba) # (B, T, d_model)
-        x = state_embeds + action_embeds       # (B, T, d_model)
+        x = _combine_gate_inputs(state_embeds, action_embeds, self.gate_mode)
         x = self.pos_encoding(x)          # add positional encoding
+        attention_mask = None
+        if self.gate_mode != 'retrospective':
+            attention_mask = _causal_attention_mask(x.size(1), x.device)
         if mask is not None:
             padding_mask = ~mask
-            x = self.transformer(x, src_key_padding_mask=padding_mask)
+            x = self.transformer(x, mask=attention_mask, src_key_padding_mask=padding_mask)
         else:
-            x = self.transformer(x)           # (B, T, d_model)
+            x = self.transformer(x, mask=attention_mask)  # (B, T, d_model)
 
         logits = self.fc_out(x)           # (B, T, num_latents)
         return logits

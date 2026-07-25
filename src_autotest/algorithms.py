@@ -135,7 +135,7 @@ class PGIAVI:
                  model_type='IntentionRNN', hidden_dim=128, rnn_hidden_dim=128,
                  num_layers=1, dropout=0.3, nhead=4, lr=1e-3,
                  reg_type='l1', reg_weight=0., num_epochs=1,
-                 loss_threshold=1e-2, max_iterations=150):
+                 loss_threshold=1e-2, max_iterations=150, gate_mode='retrospective'):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.num_latents = num_latents  # K
         self.num_states = num_states
@@ -150,9 +150,11 @@ class PGIAVI:
         self.num_epochs = num_epochs
         self.loss_threshold = loss_threshold
         self.max_iterations = max_iterations
+        self.gate_mode = gate_mode
 
         model_kwargs = dict(num_states=num_states, num_actions=num_actions,
-                            num_latents=num_latents, num_layers=num_layers, dropout=dropout)
+                            num_latents=num_latents, num_layers=num_layers, dropout=dropout,
+                            gate_mode=gate_mode)
         if model_type == 'IntentionTransformer':
             model_kwargs.update(d_model=hidden_dim, nhead=nhead)
             model_cls = IntentionTransformer
@@ -197,7 +199,13 @@ class PGIAVI:
                torch.concatenate(log_joints, axis=0).to('cpu')
 
     def get_batch_log_pi(self, trajs, batched_iavi):
-        agent_policies = batched_iavi.get_policies().to('cpu')  # (K, num_states, num_actions)
+        if self.gate_mode == 'retrospective':
+            agent_policies = batched_iavi.get_policies().to('cpu')
+            agent_log_policies = torch.log(agent_policies + 1e-8)
+        else:
+            agent_log_policies = torch.log_softmax(
+                batched_iavi.q.to('cpu'), dim=-1
+            )
 
         log_pi_list = []
         seq_lens = []
@@ -207,7 +215,7 @@ class PGIAVI:
 
             states = torch.tensor([s for s, a, ns in traj], dtype=torch.long, device='cpu')
             actions = torch.tensor([a for s, a, ns in traj], dtype=torch.long, device='cpu')
-            log_pi = torch.log(agent_policies[:, states, actions] + 1e-8)  # (K, T)
+            log_pi = agent_log_policies[:, states, actions]  # (K, T)
             log_pi_list.append(log_pi.T)  # (T, K)
         
         # Padding
@@ -389,11 +397,24 @@ class PGIAVI:
 
             if (abs(total_loss) < self.loss_threshold) or (logger_cnt >= self.max_iterations):
                 final_iteration_time = time.time() - iteration_start_time
-                print(f'Iteration {logger_cnt}, Converged with Loss: {total_loss:.4f}, Total time: {final_iteration_time:.2f}s')
+                stop_reason = (
+                    'loss_threshold'
+                    if abs(total_loss) < self.loss_threshold
+                    else 'max_iterations'
+                )
+                print(f'Iteration {logger_cnt}, Stopped ({stop_reason}) with Loss: {total_loss:.4f}, Total time: {final_iteration_time:.2f}s')
                 break
 
         f = {}
         ll = {}
+        ll['score_type'] = (
+            'retrospective_compatibility_score'
+            if self.gate_mode == 'retrospective'
+            else 'predictive_action_log_likelihood'
+        )
+        ll['iterations'] = logger_cnt
+        ll['stop_reason'] = stop_reason
+        ll['final_loss'] = float(total_loss)
         mask = {}
         for ds in ['train', 'test']:
             trajs = eval(f'self.{ds}_trajs')
@@ -403,19 +424,37 @@ class PGIAVI:
 
             eval_dataset = TensorDataset(batch_states_eval, batch_actions_eval, batch_log_pi_eval, mask_eval)
             eval_loader = DataLoader(eval_dataset, batch_size=1024, shuffle=False, num_workers=2, pin_memory=True)
-            _, log_f, log_p_joint = self.intention_batch_mapping(eval_loader, max_len_eval)
+            log_p_gamma, log_f, log_p_joint = self.intention_batch_mapping(eval_loader, max_len_eval)
             
             # Get per-trajectory results
             fs = []
+            gates = []
+            responsibilities = []
+            step_log_scores = []
             lls = []
             for i, seq_len in enumerate(mask_eval.sum(dim=1)):
+                seq_len = int(seq_len.item())
                 f_i = torch.exp(log_f[i, :, :]).cpu().numpy()
+                valid_i = mask_eval[i].cpu().numpy()
+                gate_i = f_i.copy()
+                gate_i[~valid_i] = 0.0
+                responsibility_i = torch.exp(log_p_gamma[i, :, :]).cpu().numpy()
+                responsibility_i[~valid_i] = 0.0
                 log_joint_i = log_p_joint[i, :seq_len, :].cpu().numpy()
                 fs.append(f_i)
-                lls.append(np.mean(logsumexp(log_joint_i, axis=-1)))
-            lls = np.mean(np.hstack(lls))
-            ll[ds] = np.mean(lls)
+                gates.append(gate_i)
+                responsibilities.append(responsibility_i)
+                step_score = logsumexp(log_joint_i, axis=-1)
+                step_log_scores.append(step_score)
+                lls.append(np.mean(step_score))
+            ll[ds] = float(np.mean(lls))
+            ll[f'{ds}_traj_mean'] = ll[ds]
+            ll[f'{ds}_step_mean'] = float(np.mean(np.concatenate(step_log_scores)))
+            ll[f'{ds}_steps'] = int(sum(len(scores) for scores in step_log_scores))
             f[ds] = fs
+            f[f'gate_{ds}'] = gates
+            f[f'responsibility_{ds}'] = responsibilities
+            f[f'step_log_score_{ds}'] = step_log_scores
             mask[ds] = mask_eval.cpu().numpy()
 
         return ll, f, mask, batched_iavi

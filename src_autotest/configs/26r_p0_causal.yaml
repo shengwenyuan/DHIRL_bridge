@@ -1,0 +1,71 @@
+# Fixed clustered Bridge input. No raw-image or vision-encoder comparison is run here.
+defaults:
+  num_states: 2048
+  num_actions: 32
+  data_dir: /home/srh/IRL/discretes/trajs_viz/dinov2_small
+  ll_filename: metrics.csv
+  output_dir: src_autotest/outputs/26r
+  discount: 0.97
+  num_repeats: 1
+  paired_fold_seeds: 1
+  p0_artifacts: 1
+  num_latents: 4
+  model_type: IntentionRNN
+  hidden_dim: 128
+  rnn_hidden_dim: 128
+  num_layers: 1
+  dropout: 0.2
+  nhead: 4
+  lr: 0.001
+  reg_type: l1
+  reg_weight: 0.0
+  num_epochs: 1
+  loss_threshold: 0.001
+  max_iterations: 150
+  save_npy: 1
+
+groups:
+  bridge_retrospective_s42:
+    id: bridge_retrospective_s42
+    experiments:
+      - id: E00
+        gate_mode: retrospective
+        rand_seed: 42
+
+  bridge_causal_s0:
+    id: bridge_causal_s0
+    experiments:
+      - id: E00
+        gate_mode: causal
+        rand_seed: 0
+  bridge_causal_s42:
+    id: bridge_causal_s42
+    experiments:
+      - id: E00
+        gate_mode: causal
+        rand_seed: 42
+  bridge_causal_s2026:
+    id: bridge_causal_s2026
+    experiments:
+      - id: E00
+        gate_mode: causal
+        rand_seed: 2026
+
+  bridge_state_history_s0:
+    id: bridge_state_history_s0
+    experiments:
+      - id: E00
+        gate_mode: state_only
+        rand_seed: 0
+  bridge_state_history_s42:
+    id: bridge_state_history_s42
+    experiments:
+      - id: E00
+        gate_mode: state_only
+        rand_seed: 42
+  bridge_state_history_s2026:
+    id: bridge_state_history_s2026
+    experiments:
+      - id: E00
+        gate_mode: state_only
+        rand_seed: 2026

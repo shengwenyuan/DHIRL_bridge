@@ -14,6 +14,8 @@ import yaml
 import subprocess
 import datetime
 import argparse
+import json
+import shutil
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 TRAIN_MODULE = 'src_autotest.train_bridge'
@@ -25,7 +27,8 @@ PARAM_KEYS = [
     'model_type', 'hidden_dim', 'rnn_hidden_dim', 'num_layers', 'dropout', 'nhead', 'lr',
     'reg_type', 'reg_weight',
     'num_epochs', 'loss_threshold', 'max_iterations',
-    'save_npy',
+    'save_npy', 'gate_mode', 'fold_idx', 'max_trajs',
+    'paired_fold_seeds', 'p0_artifacts',
 ]
 
 
@@ -96,6 +99,9 @@ def main():
     timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
     log_root = args.log_dir or os.path.join('src_autotest', 'logs', timestamp)
     os.makedirs(log_root, exist_ok=True)
+    shutil.copy2(args.config, os.path.join(log_root, 'config.yaml'))
+    with open(os.path.join(log_root, 'command.txt'), 'w') as fout:
+        fout.write(' '.join(sys.argv) + '\n')
 
     summary_rows = []
 
@@ -116,6 +122,7 @@ def main():
         print(f'{"="*60}')
 
         for idx, exp in enumerate(experiments):
+            exp = dict(exp)
             eid = exp.pop('id', f'E{idx:02d}')
             params = {**defaults, **exp}
             params['group_id'] = f'{gid}/{eid}'
@@ -128,6 +135,31 @@ def main():
             log_path = os.path.join(group_log_dir, f'{eid}.log')
             tag = f'{gid}/{eid}'
             all_jobs.append((cmd, log_path, gid, label, tag))
+
+    git_commit = subprocess.check_output(
+        ['git', 'rev-parse', 'HEAD'], text=True
+    ).strip()
+    git_branch = subprocess.check_output(
+        ['git', 'branch', '--show-current'], text=True
+    ).strip()
+    git_dirty = bool(subprocess.check_output(
+        ['git', 'status', '--short'], text=True
+    ).strip())
+    with open(os.path.join(log_root, 'git_commit.txt'), 'w') as fout:
+        fout.write(git_commit + '\n')
+    run_manifest = {
+        'timestamp': timestamp,
+        'config': os.path.abspath(args.config),
+        'git_commit': git_commit,
+        'git_branch': git_branch,
+        'git_dirty': git_dirty,
+        'jobs': [
+            {'tag': tag, 'command': cmd, 'log': os.path.abspath(log_path)}
+            for cmd, log_path, _, _, tag in all_jobs
+        ],
+    }
+    with open(os.path.join(log_root, 'run_manifest.json'), 'w') as fout:
+        json.dump(run_manifest, fout, indent=2)
 
     if args.max_parallel <= 1:
         # Sequential (original behavior)
@@ -165,6 +197,11 @@ def main():
         for row in summary_rows:
             sf.write(f"{row['tag']:<12s}  {row['label']:<40s}  "
                      f"{row['status']:<12s}  {row['elapsed']}\n")
+
+    run_manifest['results'] = summary_rows
+    run_manifest['finished'] = datetime.datetime.now().isoformat()
+    with open(os.path.join(log_root, 'run_manifest.json'), 'w') as fout:
+        json.dump(run_manifest, fout, indent=2)
 
     print(f'\n\nAll done.  Logs: {log_root}')
     print(f'Summary:   {summary_path}')
